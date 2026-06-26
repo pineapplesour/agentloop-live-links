@@ -154,17 +154,6 @@
       font-weight: 900;
       white-space: nowrap;
     }
-    footer {
-      margin-top: 30px;
-      color: var(--muted);
-      font-size: 13px;
-      line-height: 1.6;
-    }
-    code {
-      background: #fff;
-      border: 1px solid var(--line);
-      padding: 2px 5px;
-    }
     @media (max-width: 640px) {
       main { width: min(100% - 20px, 1040px); padding-top: 20px; }
       header { padding: 18px; }
@@ -178,22 +167,13 @@
     <header>
       <p class="eyebrow">AGENTLOOP LIVE LINKS</p>
       <h1>작업 중인 사이트를 고정 주소에서 바로 열기</h1>
-      <p class="lead">
-        Cloudflare quick tunnel 주소가 바뀌어도 이 GitHub Pages 주소는 유지됩니다.
-        터널을 새로 띄우면 <code>links.json</code>만 갱신해서 최신 CareBridge와 디자인 비교 보드로 연결합니다.
-      </p>
       <div class="meta" id="meta"></div>
     </header>
     <div id="content" aria-live="polite"></div>
-    <footer>
-      옛 CareBridge 챗봇 어댑터가 붙으면 안 됩니다. 현재 기준 어댑터 버전은
-      <code id="adapter-version">확인 중</code> 입니다.
-    </footer>
   </main>
   <script>
     const content = document.getElementById("content");
     const meta = document.getElementById("meta");
-    const adapterVersion = document.getElementById("adapter-version");
 
     function pill(label) {
       const span = document.createElement("span");
@@ -203,7 +183,6 @@
     }
 
     function render(data) {
-      adapterVersion.textContent = data.adapterVersion || "unknown";
       meta.innerHTML = "";
       meta.append(
         pill(`갱신: ${data.generatedAt || "unknown"}`),
