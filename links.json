@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-26T08:51:31.031Z",
+  "generatedAt": "2026-06-26T08:59:54.372Z",
   "tunnelBase": "https://jacob-periodically-graphs-engineering.trycloudflare.com",
-  "adapterVersion": "20260626-atrium-native-ops",
+  "adapterVersion": "20260626-atrium-native-ops-overlayfix",
   "groups": [
     {
       "title": "바로 확인",
