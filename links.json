@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-26T04:23:06.000Z",
-  "tunnelBase": "https://enabled-task-shower-runner.trycloudflare.com",
-  "adapterVersion": "20260626-native-live-audio",
+  "generatedAt": "2026-06-26T07:33:00.000Z",
+  "tunnelBase": "https://660bcb57551143.lhr.life",
+  "adapterVersion": "20260626-plain-live-surface",
   "groups": [
     {
       "title": "바로 확인",
@@ -9,10 +9,10 @@
       "items": [
         {
           "id": "carebridge-live",
-          "title": "랄피 최신 CareBridge",
-          "href": "https://enabled-task-shower-runner.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
+          "title": "CareBridge Live",
+          "href": "https://660bcb57551143.lhr.life/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
-          "note": "음성 Live 파일기억 + 네이티브 오디오 어댑터"
+          "note": "원본 CareBridge · 프롬프트 없는 생 Live"
         }
       ]
     },
@@ -23,28 +23,28 @@
         {
           "id": "carebridge-platform",
           "title": "운영형 플랫폼",
-          "href": "https://enabled-task-shower-runner.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
+          "href": "https://660bcb57551143.lhr.life/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "현재 최신 CareBridge 기준"
         },
         {
           "id": "maeum-atrium",
           "title": "아트리움 상담실",
-          "href": "https://enabled-task-shower-runner.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
+          "href": "https://660bcb57551143.lhr.life/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "mental-care-platform",
           "title": "화이트 플랫폼",
-          "href": "https://enabled-task-shower-runner.trycloudflare.com/mental-care-platform.html?modelProvider=gemini-live",
+          "href": "https://660bcb57551143.lhr.life/mental-care-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "rafi-rainbow",
           "title": "레인보우 플랫폼",
-          "href": "https://enabled-task-shower-runner.trycloudflare.com/rafi-rainbow-counseling.html?modelProvider=gemini-live",
+          "href": "https://660bcb57551143.lhr.life/rafi-rainbow-counseling.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         }
