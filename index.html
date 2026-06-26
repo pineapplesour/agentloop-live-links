@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Agentloop Live Links</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #14131a;
+      --muted: #6b6678;
+      --line: #dfd8ee;
+      --paper: #fffdf8;
+      --panel: #ffffff;
+      --violet: #6d4aff;
+      --violet-strong: #4426c9;
+      --green: #0f8a64;
+      --amber: #b56a00;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background:
+        linear-gradient(90deg, rgba(109, 74, 255, 0.08) 1px, transparent 1px) 0 0 / 44px 44px,
+        linear-gradient(180deg, #fbf8ff 0%, #fffdf8 42%, #f7f4ee 100%);
+      color: var(--ink);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      letter-spacing: 0;
+    }
+    main {
+      width: min(1040px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 44px 0 72px;
+    }
+    header {
+      border: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.84);
+      backdrop-filter: blur(10px);
+      padding: 24px;
+      box-shadow: 0 18px 50px rgba(55, 39, 92, 0.10);
+    }
+    .eyebrow {
+      margin: 0 0 10px;
+      color: var(--violet-strong);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+    .lead {
+      margin: 14px 0 0;
+      max-width: 780px;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.7;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+    .pill {
+      border: 1px solid var(--line);
+      background: #fff;
+      color: #3c3650;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    section {
+      margin-top: 28px;
+      border-top: 2px solid var(--ink);
+      padding-top: 20px;
+    }
+    .section-head {
+      display: grid;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    h2 {
+      margin: 0;
+      font-size: 21px;
+      letter-spacing: 0;
+    }
+    .section-head p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .links {
+      display: grid;
+      gap: 12px;
+    }
+    .link-card {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      border: 1px solid var(--line);
+      background: var(--panel);
+      padding: 18px;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 8px 28px rgba(55, 39, 92, 0.07);
+      transition: transform .16s ease, border-color .16s ease, box-shadow .16s ease;
+    }
+    .link-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(109, 74, 255, 0.42);
+      box-shadow: 0 16px 38px rgba(55, 39, 92, 0.12);
+    }
+    .link-title {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      margin: 0 0 7px;
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 22px;
+      padding: 3px 8px;
+      border: 1px solid rgba(15, 138, 100, 0.25);
+      color: var(--green);
+      background: rgba(15, 138, 100, 0.08);
+      font-size: 11px;
+      font-weight: 900;
+    }
+    .badge.pending {
+      border-color: rgba(181, 106, 0, 0.25);
+      color: var(--amber);
+      background: rgba(181, 106, 0, 0.08);
+    }
+    .note {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .open {
+      border: 1px solid var(--ink);
+      background: var(--ink);
+      color: #fff;
+      padding: 10px 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    footer {
+      margin-top: 30px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    code {
+      background: #fff;
+      border: 1px solid var(--line);
+      padding: 2px 5px;
+    }
+    @media (max-width: 640px) {
+      main { width: min(100% - 20px, 1040px); padding-top: 20px; }
+      header { padding: 18px; }
+      .link-card { grid-template-columns: 1fr; }
+      .open { width: fit-content; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <p class="eyebrow">AGENTLOOP LIVE LINKS</p>
+      <h1>작업 중인 사이트를 고정 주소에서 바로 열기</h1>
+      <p class="lead">
+        Cloudflare quick tunnel 주소가 바뀌어도 이 GitHub Pages 주소는 유지됩니다.
+        터널을 새로 띄우면 <code>links.json</code>만 갱신해서 최신 CareBridge와 디자인 비교 보드로 연결합니다.
+      </p>
+      <div class="meta" id="meta"></div>
+    </header>
+    <div id="content" aria-live="polite"></div>
+    <footer>
+      옛 CareBridge 챗봇 어댑터가 붙으면 안 됩니다. 현재 기준 어댑터 버전은
+      <code id="adapter-version">확인 중</code> 입니다.
+    </footer>
+  </main>
+  <script>
+    const content = document.getElementById("content");
+    const meta = document.getElementById("meta");
+    const adapterVersion = document.getElementById("adapter-version");
+
+    function pill(label) {
+      const span = document.createElement("span");
+      span.className = "pill";
+      span.textContent = label;
+      return span;
+    }
+
+    function render(data) {
+      adapterVersion.textContent = data.adapterVersion || "unknown";
+      meta.innerHTML = "";
+      meta.append(
+        pill(`갱신: ${data.generatedAt || "unknown"}`),
+        pill(`터널: ${data.tunnelBase || "unknown"}`),
+        pill(`어댑터: ${data.adapterVersion || "unknown"}`)
+      );
+      content.innerHTML = "";
+      for (const group of data.groups || []) {
+        const section = document.createElement("section");
+        section.innerHTML = `
+          <div class="section-head">
+            <h2></h2>
+            <p></p>
+          </div>
+          <div class="links"></div>
+        `;
+        section.querySelector("h2").textContent = group.title || "링크";
+        section.querySelector("p").textContent = group.description || "";
+        const links = section.querySelector(".links");
+        for (const item of group.items || []) {
+          const a = document.createElement("a");
+          a.className = "link-card";
+          a.href = item.href;
+          a.target = "_blank";
+          a.rel = "noreferrer";
+          const badgeClass = item.status === "live" ? "badge" : "badge pending";
+          a.innerHTML = `
+            <div>
+              <p class="link-title"><span></span><span class="${badgeClass}"></span></p>
+              <p class="note"></p>
+            </div>
+            <span class="open">새 창으로 열기</span>
+          `;
+          a.querySelector(".link-title span").textContent = item.title || item.id || "열기";
+          a.querySelector(".badge").textContent = item.status === "live" ? "LIVE" : "확인 필요";
+          a.querySelector(".note").textContent = item.note || item.href;
+          links.appendChild(a);
+        }
+        content.appendChild(section);
+      }
+    }
+
+    fetch("./links.json", { cache: "no-store" })
+      .then((response) => response.json())
+      .then(render)
+      .catch((error) => {
+        content.innerHTML = `<section><h2>links.json 로드 실패</h2><p class="lead">${String(error.message || error)}</p></section>`;
+      });
+  </script>
+</body>
+</html>

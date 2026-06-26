@@ -1,0 +1,61 @@
+{
+  "generatedAt": "2026-06-26T02:06:43.973Z",
+  "tunnelBase": "https://enabled-task-shower-runner.trycloudflare.com",
+  "adapterVersion": "20260626-native-live-audio",
+  "groups": [
+    {
+      "title": "바로 확인",
+      "description": "현재 작업 중인 최신 랄피/CareBridge와 디자인 비교 보드입니다. 옛 챗봇 어댑터가 아니라 20260626 네이티브 Gemini Live 오디오 어댑터가 붙어야 합니다.",
+      "items": [
+        {
+          "id": "carebridge-live",
+          "title": "랄피 Live 최신 CareBridge",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
+          "status": "live",
+          "note": "Gemini Live 파일기억 + 네이티브 오디오 어댑터"
+        },
+        {
+          "id": "design-board",
+          "title": "랄피 디자인 비교 보드",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/designs.html",
+          "status": "live",
+          "note": "CareBridge 최신 링크를 포함한 디자인 비교 사이트"
+        }
+      ]
+    },
+    {
+      "title": "디자인 후보 직접 열기",
+      "description": "비교 보드 안의 개별 후보를 새 창에서 바로 엽니다.",
+      "items": [
+        {
+          "id": "carebridge-platform",
+          "title": "운영형 플랫폼",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
+          "status": "live",
+          "note": "현재 최신 CareBridge 기준"
+        },
+        {
+          "id": "maeum-atrium",
+          "title": "아트리움 상담실",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
+          "status": "live",
+          "note": "디자인 후보"
+        },
+        {
+          "id": "mental-care-platform",
+          "title": "화이트 플랫폼",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/mental-care-platform.html?modelProvider=gemini-live",
+          "status": "live",
+          "note": "디자인 후보"
+        },
+        {
+          "id": "rafi-rainbow",
+          "title": "레인보우 플랫폼",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/rafi-rainbow-counseling.html?modelProvider=gemini-live",
+          "status": "live",
+          "note": "디자인 후보"
+        }
+      ]
+    }
+  ]
+}
