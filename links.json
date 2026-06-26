@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T03:06:00.000Z",
+  "generatedAt": "2026-06-26T03:46:21.853Z",
   "tunnelBase": "https://enabled-task-shower-runner.trycloudflare.com",
   "adapterVersion": "20260626-native-live-audio",
   "groups": [
@@ -9,10 +9,10 @@
       "items": [
         {
           "id": "carebridge-live",
-          "title": "랄피 Live 최신 CareBridge",
+          "title": "랄피 최신 CareBridge",
           "href": "https://enabled-task-shower-runner.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
-          "note": "Gemini Live 파일기억 + 네이티브 오디오 어댑터"
+          "note": "음성 Live 파일기억 + 네이티브 오디오 어댑터"
         },
         {
           "id": "voice-live-preview",
@@ -20,6 +20,13 @@
           "href": "https://enabled-task-shower-runner.trycloudflare.com/voice-live-preview/",
           "status": "live",
           "note": "30개 목소리 사전 생성 WAV 샘플"
+        },
+        {
+          "id": "voice-live-translation-audit",
+          "title": "음성 Live 번역 음성 감사",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/voice-live-preview/translation-audit/",
+          "status": "live",
+          "note": "30개 목소리 × 4개 번역 방향 실제 음성 WAV"
         }
       ]
     },
