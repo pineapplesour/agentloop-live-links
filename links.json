@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-26T09:43:30.448Z",
+  "generatedAt": "2026-06-26T10:00:50.628Z",
   "tunnelBase": "https://jacob-periodically-graphs-engineering.trycloudflare.com",
-  "adapterVersion": "20260626-atrium-integrated-ops-alertfix",
+  "adapterVersion": "20260626-atrium-roleauth",
   "groups": [
     {
       "title": "바로 확인",
