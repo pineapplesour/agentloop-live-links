@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-26T08:41:55.433Z",
-  "tunnelBase": "https://c744-124-60-154-81.ngrok-free.app",
-  "adapterVersion": "20260626-plain-live-surface",
+  "generatedAt": "2026-06-26T08:51:31.031Z",
+  "tunnelBase": "https://jacob-periodically-graphs-engineering.trycloudflare.com",
+  "adapterVersion": "20260626-atrium-native-ops",
   "groups": [
     {
       "title": "바로 확인",
@@ -10,7 +10,7 @@
         {
           "id": "carebridge-live",
           "title": "CareBridge Live",
-          "href": "https://c744-124-60-154-81.ngrok-free.app/carebridge-platform.html?modelProvider=gemini-live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "원본 CareBridge · 프롬프트 없는 생 Live"
         }
@@ -23,28 +23,28 @@
         {
           "id": "carebridge-platform",
           "title": "운영형 플랫폼",
-          "href": "https://c744-124-60-154-81.ngrok-free.app/carebridge-platform.html?modelProvider=gemini-live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "현재 최신 CareBridge 기준"
         },
         {
           "id": "maeum-atrium",
           "title": "아트리움 상담실",
-          "href": "https://c744-124-60-154-81.ngrok-free.app/maeum-atrium.html?modelProvider=gemini-live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "mental-care-platform",
           "title": "화이트 플랫폼",
-          "href": "https://c744-124-60-154-81.ngrok-free.app/mental-care-platform.html?modelProvider=gemini-live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/mental-care-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "rafi-rainbow",
           "title": "레인보우 플랫폼",
-          "href": "https://c744-124-60-154-81.ngrok-free.app/rafi-rainbow-counseling.html?modelProvider=gemini-live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/rafi-rainbow-counseling.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         }
