@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T08:59:54.372Z",
+  "generatedAt": "2026-06-26T09:03:32.668Z",
   "tunnelBase": "https://jacob-periodically-graphs-engineering.trycloudflare.com",
   "adapterVersion": "20260626-atrium-native-ops-overlayfix",
   "groups": [
@@ -9,10 +9,17 @@
       "items": [
         {
           "id": "carebridge-live",
-          "title": "CareBridge Live",
-          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
+          "title": "랄피 아트리움 상담실",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
-          "note": "원본 CareBridge · 프롬프트 없는 생 Live"
+          "note": "랄피 연결 최신판 · 아트리움 상담 운영 포함"
+        },
+        {
+          "id": "carebridge-plain-live",
+          "status": "live",
+          "title": "순정 Live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
+          "note": "프롬프트 없는 생 Live · 보존용"
         }
       ]
     },
@@ -22,17 +29,17 @@
       "items": [
         {
           "id": "carebridge-platform",
-          "title": "운영형 플랫폼",
-          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
+          "title": "순정 Live",
+          "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
           "status": "live",
-          "note": "현재 최신 CareBridge 기준"
+          "note": "프롬프트 없는 생 Live · 보존용"
         },
         {
           "id": "maeum-atrium",
-          "title": "아트리움 상담실",
+          "title": "랄피 아트리움 상담실",
           "href": "https://jacob-periodically-graphs-engineering.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
-          "note": "디자인 후보"
+          "note": "랄피 연결 최신판"
         },
         {
           "id": "mental-care-platform",
