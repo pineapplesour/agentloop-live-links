@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-26T10:00:50.628Z",
+  "generatedAt": "2026-06-26T10:12:45.106Z",
   "tunnelBase": "https://jacob-periodically-graphs-engineering.trycloudflare.com",
-  "adapterVersion": "20260626-atrium-roleauth",
+  "adapterVersion": "20260626-atrium-roleauth-glass",
   "groups": [
     {
       "title": "바로 확인",
