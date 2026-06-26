@@ -1,6 +1,6 @@
 {
-  "generatedAt": "2026-06-26T07:33:00.000Z",
-  "tunnelBase": "https://660bcb57551143.lhr.life",
+  "generatedAt": "2026-06-26T08:02:39.000Z",
+  "tunnelBase": "https://8dabe1ab2426f1.lhr.life",
   "adapterVersion": "20260626-plain-live-surface",
   "groups": [
     {
@@ -10,7 +10,7 @@
         {
           "id": "carebridge-live",
           "title": "CareBridge Live",
-          "href": "https://660bcb57551143.lhr.life/carebridge-platform.html?modelProvider=gemini-live",
+          "href": "https://8dabe1ab2426f1.lhr.life/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "원본 CareBridge · 프롬프트 없는 생 Live"
         }
@@ -23,28 +23,28 @@
         {
           "id": "carebridge-platform",
           "title": "운영형 플랫폼",
-          "href": "https://660bcb57551143.lhr.life/carebridge-platform.html?modelProvider=gemini-live",
+          "href": "https://8dabe1ab2426f1.lhr.life/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "현재 최신 CareBridge 기준"
         },
         {
           "id": "maeum-atrium",
           "title": "아트리움 상담실",
-          "href": "https://660bcb57551143.lhr.life/maeum-atrium.html?modelProvider=gemini-live",
+          "href": "https://8dabe1ab2426f1.lhr.life/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "mental-care-platform",
           "title": "화이트 플랫폼",
-          "href": "https://660bcb57551143.lhr.life/mental-care-platform.html?modelProvider=gemini-live",
+          "href": "https://8dabe1ab2426f1.lhr.life/mental-care-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "rafi-rainbow",
           "title": "레인보우 플랫폼",
-          "href": "https://660bcb57551143.lhr.life/rafi-rainbow-counseling.html?modelProvider=gemini-live",
+          "href": "https://8dabe1ab2426f1.lhr.life/rafi-rainbow-counseling.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         }
