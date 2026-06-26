@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-26T02:06:43.973Z",
+  "generatedAt": "2026-06-26T03:06:00.000Z",
   "tunnelBase": "https://enabled-task-shower-runner.trycloudflare.com",
   "adapterVersion": "20260626-native-live-audio",
   "groups": [
@@ -13,6 +13,13 @@
           "href": "https://enabled-task-shower-runner.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "Gemini Live 파일기억 + 네이티브 오디오 어댑터"
+        },
+        {
+          "id": "voice-live-preview",
+          "title": "음성 Live 목소리 미리듣기",
+          "href": "https://enabled-task-shower-runner.trycloudflare.com/voice-live-preview/",
+          "status": "live",
+          "note": "30개 목소리 사전 생성 WAV 샘플"
         }
       ]
     },
