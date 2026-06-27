@@ -5,14 +5,14 @@
   "groups": [
     {
       "title": "바로 확인",
-      "description": "",
+      "description": "공유용으로 먼저 열어볼 안정 경로입니다.",
       "items": [
         {
-          "id": "carebridge-live",
-          "title": "랄피 아트리움 상담실",
-          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
+          "id": "ralph-live",
+          "title": "랄피 Live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
-          "note": "랄피 연결 최신판 · 아트리움 상담 운영 포함"
+          "note": "장기기억 · 대화기록 · 음성 대화"
         },
         {
           "id": "carebridge-plain-live",
@@ -24,22 +24,15 @@
       ]
     },
     {
-      "title": "디자인 후보 직접 열기",
-      "description": "비교 보드 안의 개별 후보를 새 창에서 바로 엽니다.",
+      "title": "작업중 · 직접 확인",
+      "description": "아트리움과 디자인 후보는 아직 검수 중입니다.",
       "items": [
         {
-          "id": "carebridge-platform",
-          "title": "순정 Live",
-          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
-          "status": "live",
-          "note": "프롬프트 없는 생 Live · 보존용"
-        },
-        {
           "id": "maeum-atrium",
-          "title": "랄피 아트리움 상담실",
+          "title": "아트리움 상담실",
           "href": "https://colony-daniel-tracker-dns.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
-          "status": "live",
-          "note": "랄피 연결 최신판"
+          "status": "work",
+          "note": "3D 아트리움 작업중 · 검수 필요"
         },
         {
           "id": "mental-care-platform",
