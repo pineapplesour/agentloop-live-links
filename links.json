@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-27T02:08:15.542Z",
+  "generatedAt": "2026-06-27T02:42:00.000Z",
   "tunnelBase": "https://colony-daniel-tracker-dns.trycloudflare.com",
-  "adapterVersion": "20260627-atrium-role-entry",
+  "adapterVersion": "20260627-atrium-live-chat-3",
   "groups": [
     {
       "title": "바로 확인",
@@ -24,29 +24,14 @@
       ]
     },
     {
-      "title": "작업중 · 직접 확인",
-      "description": "아트리움과 디자인 후보는 아직 검수 중입니다.",
+      "title": "작업중",
       "items": [
         {
           "id": "maeum-atrium",
           "title": "아트리움 상담실",
           "href": "https://colony-daniel-tracker-dns.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
           "status": "work",
-          "note": "3D 아트리움 작업중 · 검수 필요"
-        },
-        {
-          "id": "mental-care-platform",
-          "title": "화이트 플랫폼",
-          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/mental-care-platform.html?modelProvider=gemini-live",
-          "status": "live",
-          "note": "디자인 후보"
-        },
-        {
-          "id": "rafi-rainbow",
-          "title": "레인보우 플랫폼",
-          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/rafi-rainbow-counseling.html?modelProvider=gemini-live",
-          "status": "live",
-          "note": "디자인 후보"
+          "note": "3D 아트리움"
         }
       ]
     }
