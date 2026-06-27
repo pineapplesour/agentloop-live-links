@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-06-26T13:17:49.070Z",
-  "tunnelBase": "https://tracks-keyword-spell-worker.trycloudflare.com",
-  "adapterVersion": "20260626-atrium-mobile-counselor",
+  "generatedAt": "2026-06-27T01:49:58.174Z",
+  "tunnelBase": "https://colony-daniel-tracker-dns.trycloudflare.com",
+  "adapterVersion": "20260627-atrium-design-preserve",
   "groups": [
     {
       "title": "바로 확인",
@@ -10,7 +10,7 @@
         {
           "id": "carebridge-live",
           "title": "랄피 아트리움 상담실",
-          "href": "https://tracks-keyword-spell-worker.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
           "note": "랄피 연결 최신판 · 아트리움 상담 운영 포함"
         },
@@ -18,7 +18,7 @@
           "id": "carebridge-plain-live",
           "status": "live",
           "title": "순정 Live",
-          "href": "https://tracks-keyword-spell-worker.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
           "note": "프롬프트 없는 생 Live · 보존용"
         }
       ]
@@ -30,28 +30,28 @@
         {
           "id": "carebridge-platform",
           "title": "순정 Live",
-          "href": "https://tracks-keyword-spell-worker.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
           "status": "live",
           "note": "프롬프트 없는 생 Live · 보존용"
         },
         {
           "id": "maeum-atrium",
           "title": "랄피 아트리움 상담실",
-          "href": "https://tracks-keyword-spell-worker.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
           "note": "랄피 연결 최신판"
         },
         {
           "id": "mental-care-platform",
           "title": "화이트 플랫폼",
-          "href": "https://tracks-keyword-spell-worker.trycloudflare.com/mental-care-platform.html?modelProvider=gemini-live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/mental-care-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         },
         {
           "id": "rafi-rainbow",
           "title": "레인보우 플랫폼",
-          "href": "https://tracks-keyword-spell-worker.trycloudflare.com/rafi-rainbow-counseling.html?modelProvider=gemini-live",
+          "href": "https://colony-daniel-tracker-dns.trycloudflare.com/rafi-rainbow-counseling.html?modelProvider=gemini-live",
           "status": "live",
           "note": "디자인 후보"
         }
