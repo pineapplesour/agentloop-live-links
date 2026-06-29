@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-28T02:29:30.000+09:00",
+  "generatedAt": "2026-06-29T14:50:57+09:00",
   "tunnelBase": "https://psykey.ai.kr/agent-live",
   "adapterVersion": "20260627-atrium-live-chat-5",
   "groups": [
@@ -13,6 +13,13 @@
           "href": "https://psykey.ai.kr/agent-live/carebridge-platform.html?modelProvider=gemini-live",
           "status": "live",
           "note": "장기기억 · 대화기록 · 음성 대화"
+        },
+        {
+          "id": "ralph-checkin-final-live",
+          "title": "랄피 마음 체크인",
+          "href": "https://psykey.ai.kr/agent-live/carebridge-platform.html?modelProvider=gemini-live&surface=ralph-checkin-final",
+          "status": "live",
+          "note": "최종 프롬프트 · 받아주고 나서 여는 마음 체크인"
         },
         {
           "id": "carebridge-plain-live",
