@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>CareBridge AI — 건강검진 결과 해석 및 일상 루틴 플랫폼</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+<link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.css" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+:root{
+  --mint-50:#f1faf6;
+  --mint-100:#e2f4ec;
+  --mint-200:#c4e8d8;
+  --mint-300:#9ad8bd;
+  --mint-400:#5dc299;
+  --mint-500:#2fa97c;
+  --mint-600:#1f8b64;
+  --mint-700:#176a4d;
+  --sage-100:#eef3ee;
+  --sage-200:#dde7dd;
+  --sage-500:#6f8a78;
+  --ink:#10231b;
+  --ink-soft:#3a4d44;
+  --ink-faint:#6c7d74;
+  --white:#ffffff;
+  --paper:#f6fbf8;
+  --line:#e3efe8;
+  --shadow-sm:0 2px 8px rgba(31,139,100,.06), 0 1px 2px rgba(16,35,27,.04);
+  --shadow-md:0 14px 40px -16px rgba(31,139,100,.22), 0 4px 12px rgba(16,35,27,.05);
+  --shadow-lg:0 36px 80px -28px rgba(31,139,100,.32), 0 8px 24px rgba(16,35,27,.06);
+  --radius:22px;
+  --radius-sm:14px;
+  --font:"Pretendard","Pretendard Variable",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  --mono:"Space Grotesk",var(--font);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  font-family:var(--font);
+  color:var(--ink);
+  background:
+    radial-gradient(1200px 700px at 88% -8%, var(--mint-100), transparent 60%),
+    radial-gradient(900px 600px at -6% 108%, var(--sage-100), transparent 55%),
+    var(--paper);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+}
+.deck{position:fixed;inset:0;}
+.slide{
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  padding:clamp(28px,4.4vw,72px);
+  opacity:0;visibility:hidden;
+  transform:translateY(26px) scale(.992);
+  transition:opacity .62s cubic-bezier(.2,.7,.2,1), transform .62s cubic-bezier(.2,.7,.2,1), visibility 0s linear .62s;
+  pointer-events:none;
+}
+.slide.active{
+  opacity:1;visibility:visible;transform:none;pointer-events:auto;
+  transition:opacity .62s cubic-bezier(.2,.7,.2,1), transform .62s cubic-bezier(.2,.7,.2,1), visibility 0s;
+  z-index:2;
+}
+.slide.prev{transform:translateY(-26px) scale(.992);}
+.stage{
+  width:min(1180px,100%);
+  max-height:100%;
+}
+/* ---------- reveal animation for active slide content ---------- */
+.slide.active .reveal{animation:rise .7s cubic-bezier(.2,.75,.2,1) both;}
+.slide.active .reveal[data-d="1"]{animation-delay:.06s}
+.slide.active .reveal[data-d="2"]{animation-delay:.13s}
+.slide.active .reveal[data-d="3"]{animation-delay:.2s}
+.slide.active .reveal[data-d="4"]{animation-delay:.27s}
+.slide.active .reveal[data-d="5"]{animation-delay:.34s}
+.slide.active .reveal[data-d="6"]{animation-delay:.41s}
+.slide.active .reveal[data-d="7"]{animation-delay:.48s}
+.slide.active .reveal[data-d="8"]{animation-delay:.55s}
+.slide.active .reveal[data-d="9"]{animation-delay:.62s}
+.slide.active .reveal[data-d="10"]{animation-delay:.69s}
+@keyframes rise{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:none}}
+
+/* ---------- shared atoms ---------- */
+.eyebrow{
+  display:inline-flex;align-items:center;gap:9px;
+  font-size:12.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--mint-700);
+  background:var(--mint-100);
+  border:1px solid var(--mint-200);
+  padding:7px 15px;border-radius:999px;
+}
+.eyebrow .dot{width:7px;height:7px;border-radius:50%;background:var(--mint-500);box-shadow:0 0 0 4px rgba(47,169,124,.18)}
+.kicker{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.04em;color:var(--mint-600)}
+h1.title{
+  font-size:clamp(30px,4.6vw,58px);line-height:1.06;letter-spacing:-.03em;font-weight:800;
+}
+h2.title{
+  font-size:clamp(26px,3.5vw,44px);line-height:1.1;letter-spacing:-.025em;font-weight:800;
+}
+.sub{font-size:clamp(15px,1.4vw,19px);line-height:1.6;color:var(--ink-soft);font-weight:400;max-width:62ch}
+.lead{font-size:clamp(14px,1.2vw,16px);color:var(--ink-faint);line-height:1.6}
+.mint-grad{
+  background:linear-gradient(95deg,var(--mint-600),var(--mint-400) 70%,var(--mint-500));
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+}
+.card{
+  background:var(--white);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  box-shadow:var(--shadow-sm);
+}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:var(--white);border:1px solid var(--mint-200);
+  color:var(--mint-700);font-weight:600;font-size:13px;
+  padding:8px 14px;border-radius:999px;box-shadow:var(--shadow-sm);
+}
+.badge svg{width:15px;height:15px}
+.grid{display:grid;gap:clamp(12px,1.2vw,18px)}
+.num-chip{
+  font-family:var(--mono);font-weight:700;font-size:13px;color:var(--mint-600);
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  background:var(--mint-100);border:1px solid var(--mint-200);flex:0 0 auto;
+}
+.section-head{display:flex;flex-direction:column;gap:14px;margin-bottom:clamp(20px,2.4vw,34px)}
+.feat-icon{
+  width:42px;height:42px;border-radius:13px;display:grid;place-items:center;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--mint-100),var(--mint-200));color:var(--mint-700);
+  border:1px solid var(--mint-200);
+}
+.feat-icon svg{width:21px;height:21px;stroke-width:1.8}
+
+/* ---------- progress + nav ---------- */
+.topbar{position:fixed;top:0;left:0;right:0;height:4px;z-index:40;background:transparent}
+.topbar .fill{height:100%;width:0;background:linear-gradient(90deg,var(--mint-500),var(--mint-400));transition:width .45s ease;box-shadow:0 0 14px rgba(47,169,124,.5)}
+.brandmark{
+  position:fixed;top:22px;left:clamp(20px,3vw,44px);z-index:35;
+  display:flex;align-items:center;gap:10px;font-weight:800;letter-spacing:-.02em;font-size:15px;color:var(--ink);
+}
+.brandmark .logo{
+  width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:13px;
+  background:linear-gradient(135deg,var(--mint-500),var(--mint-600));box-shadow:0 6px 16px -6px rgba(31,139,100,.6)
+}
+.brandmark .on{color:var(--mint-600)}
+.counter{
+  position:fixed;top:24px;right:clamp(20px,3vw,44px);z-index:35;
+  font-family:var(--mono);font-size:13px;color:var(--ink-faint);font-weight:600;letter-spacing:.02em;
+}
+.counter b{color:var(--ink)}
+.dots{
+  position:fixed;right:clamp(14px,1.6vw,26px);top:50%;transform:translateY(-50%);
+  z-index:35;display:flex;flex-direction:column;gap:9px;
+}
+.dots button{
+  width:9px;height:9px;border-radius:50%;border:0;cursor:pointer;padding:0;
+  background:var(--sage-200);transition:all .3s ease;
+}
+.dots button:hover{background:var(--mint-300)}
+.dots button.on{background:var(--mint-500);height:24px;border-radius:6px}
+.arrows{position:fixed;bottom:24px;right:clamp(20px,3vw,44px);z-index:35;display:flex;gap:10px}
+.arrows button{
+  width:44px;height:44px;border-radius:13px;border:1px solid var(--line);cursor:pointer;
+  background:var(--white);color:var(--ink-soft);display:grid;place-items:center;
+  box-shadow:var(--shadow-sm);transition:all .22s ease;
+}
+.arrows button:hover{color:var(--mint-700);border-color:var(--mint-300);transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.arrows button:active{transform:translateY(0)}
+.arrows button svg{width:20px;height:20px}
+.hint{
+  position:fixed;bottom:30px;left:clamp(20px,3vw,44px);z-index:35;
+  font-size:12.5px;color:var(--ink-faint);display:flex;align-items:center;gap:8px;
+  transition:opacity .5s ease;
+}
+.hint .key{font-family:var(--mono);font-size:11px;background:var(--white);border:1px solid var(--line);border-radius:6px;padding:2px 7px;box-shadow:var(--shadow-sm);color:var(--ink-soft)}
+
+/* ============ SLIDE 1 — COVER ============ */
+.cover{display:grid;grid-template-columns:1fr;gap:30px;align-items:center;width:100%;text-align:center;}
+.cover .bigmark{justify-content:center;margin-bottom:12px;}
+.cover-badges{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:16px}
+.bigmark{display:flex;align-items:center;gap:16px}
+.bigmark .glyph{
+  width:64px;height:64px;border-radius:18px;display:grid;place-items:center;color:#fff;flex:0 0 auto;
+  background:linear-gradient(135deg,var(--mint-500),var(--mint-600));
+  box-shadow:0 18px 40px -14px rgba(31,139,100,.7);
+  position:relative;overflow:hidden;
+}
+.bigmark .glyph span{font-weight:800;font-size:26px;z-index:1}
+.bigmark .glyph::after{content:"";position:absolute;inset:0;background:linear-gradient(120deg,transparent 30%,rgba(255,255,255,.35) 50%,transparent 70%);transform:translateX(-120%);animation:sheen 2.6s ease 1.1s infinite}
+@keyframes sheen{0%,55%{transform:translateX(-120%)}100%{transform:translateX(120%)}}
+.bigmark .wordmark{font-size:clamp(34px,4.2vw,52px);font-weight:800;letter-spacing:-.03em;line-height:1}
+.bigmark .glyph{animation:logoPop .72s cubic-bezier(.2,.85,.25,1.1) both}
+.bigmark .wordmark{animation:logoSlide .7s cubic-bezier(.2,.8,.2,1) .12s both}
+@keyframes logoPop{0%{opacity:0;transform:scale(.6) rotate(-8deg)}100%{opacity:1;transform:none}}
+@keyframes logoSlide{0%{opacity:0;transform:translateX(-14px)}100%{opacity:1;transform:none}}
+.cover-tag{font-size:clamp(17px,1.7vw,22px);line-height:1.5;color:var(--ink-soft);font-weight:500;}
+
+/* ============ CUSTOM LAYOUTS ============ */
+.prob-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 14px; }
+.prob-card { background: var(--white); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: transform 0.25s, box-shadow 0.25s; }
+.slide.active .prob-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.prob-card img { width: 100%; height: 210px; object-fit: cover; object-position: top; border-bottom: 1px solid var(--line); }
+.prob-card-body { padding: 18px; }
+.prob-card-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--mint-700); }
+.prob-card-body p { font-size: 13.5px; color: var(--ink-faint); line-height: 1.55; }
+
+.sol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; }
+.sol-list { display: flex; flex-direction: column; gap: 14px; }
+.sol-item { background: var(--white); padding: 18px; border-radius: 16px; border: 1px solid var(--line); box-shadow: var(--shadow-sm); }
+.sol-item h4 { font-size: 15px; font-weight: 700; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; color: var(--ink); }
+.sol-item p { font-size: 13.5px; color: var(--ink-faint); line-height: 1.5; }
+
+/* Phone Mockup Layout Fixes */
+.phone-mockup { width: 100%; max-width: 250px; margin: 0 auto; border-radius: 24px; border: 1px solid var(--line); box-shadow: var(--shadow-lg); overflow: hidden; background: var(--white); display: flex; justify-content: center; align-items: center; line-height: 0; }
+.phone-mockup img { width: 100%; height: auto; display: block; object-fit: cover; }
+
+/* TAM SAM SOM Concentric Rings */
+.tam-wrap{display:grid;grid-template-columns:300px 1fr;gap:clamp(24px,3vw,48px);align-items:center}
+.tam-vis{position:relative;width:260px;height:260px;margin:0 auto;display:grid;place-items:center}
+.ring{position:absolute;border-radius:50%;display:grid;place-items:start center;font-weight:700;animation:ringIn .7s cubic-bezier(.2,.8,.2,1) both}
+.slide.active .ring.tam{animation-delay:.05s}
+.slide.active .ring.sam{animation-delay:.18s}
+.slide.active .ring.som{animation-delay:.31s}
+@keyframes ringIn{from{opacity:0;transform:scale(.85)}to{opacity:1;transform:none}}
+.ring .lab{font-family:var(--mono);font-size:11px;font-weight:700;letter-spacing:.12em}
+.ring.tam{inset:0;background:var(--mint-100);border:1px solid var(--mint-200);color:var(--mint-700);padding-top:12px}
+.ring.sam{inset:17%;background:var(--mint-200);border:1px solid var(--mint-300);color:var(--mint-700);padding-top:11px}
+.ring.som{inset:37%;background:linear-gradient(150deg,var(--mint-500),var(--mint-600));color:#fff;box-shadow:var(--shadow-md);place-items:center;padding:0}
+.ring.som .lab{font-size:14px}
+.tam-list{display:flex;flex-direction:column;gap:12px}
+.tam-item{display:flex;gap:13px;align-items:flex-start}
+.tam-item .k{font-family:var(--mono);font-weight:700;font-size:14px;color:var(--mint-600);width:48px;flex:0 0 auto}
+.tam-item .v b{font-size:15px; color: var(--ink)}
+.tam-item .v p{font-size:13.5px;color:var(--ink-faint);line-height:1.5;margin-top:2px}
+.tam-callout{background:var(--white);border:1px solid var(--mint-200);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);margin-top:18px;}
+.tam-callout ul{margin-left: 20px; font-size:13px; color:var(--ink-soft); line-height: 1.6;}
+.tam-callout li{margin-bottom: 4px;}
+
+/* Revenue Flow (B2C -> B2B -> B2G) */
+.rev-hierarchy { display: flex; flex-direction: column; gap: 16px; align-items: center; width: 100%; max-width: 800px; margin: 0 auto; }
+.rev-box { width: 100%; background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 20px; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; align-items: center; text-align: center; position: relative; transition: transform .25s, box-shadow .25s; }
+.slide.active .rev-box:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
+.rev-box.b2c { border-color: var(--mint-300); box-shadow: var(--shadow-md); background: linear-gradient(to bottom, var(--white), var(--mint-50)); }
+.rev-title { font-family: var(--mono); font-weight: 800; font-size: 20px; color: var(--mint-600); margin-bottom: 12px; }
+.rev-items { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+.rev-item { background: var(--white); border: 1px solid var(--line); border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; color: var(--ink-soft); box-shadow: 0 1px 3px rgba(0,0,0,0.03); }
+.rev-arrow { color: var(--mint-400); font-size: 24px; font-weight: 800; line-height: 1; }
+
+.trac{display:flex;flex-direction:column;gap:11px}
+.trac-item{display:flex;gap:14px;align-items:flex-start;background:var(--white);border:1px solid var(--line);border-radius:15px;padding:15px 17px;box-shadow:var(--shadow-sm)}
+.trac-item .check{width:30px;height:30px;border-radius:9px;background:var(--mint-100);border:1px solid var(--mint-200);display:grid;place-items:center;color:var(--mint-600);flex:0 0 auto}
+.trac-item .check svg{width:17px;height:17px}
+.trac-item b{font-size:14.5px;font-weight:700}
+.trac-item p{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-top:3px}
+.trac-badges{display:flex;flex-direction:column;gap:13px}
+.tb{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden}
+.tb::before{content:"";position:absolute;left:0;top:0;bottom:0;width:4px;background:linear-gradient(var(--mint-400),var(--mint-600))}
+.tb .t{font-family:var(--mono);font-weight:700;font-size:17px;color:var(--mint-700)}
+.tb .d{font-size:12.5px;color:var(--ink-faint);margin-top:4px}
+.two{display:grid;grid-template-columns:1.2fr 0.8fr;gap:clamp(18px,2vw,30px);align-items:start}
+
+.team-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
+.member{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;text-align:center;}
+.member .av{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--mint-400),var(--mint-600));color:#fff;font-weight:800;display:grid;place-items:center;font-size:18px;margin:0 auto 8px;}
+.member .role{font-size:15.5px;font-weight:700}
+.member .meta{font-size:11.5px;color:var(--mint-600);font-family:var(--mono);font-weight:600}
+.member .desc{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-top:4px;}
+
+/* Script overlay CSS */
+.script-overlay {
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--ink); color: #fff;
+  padding: 24px clamp(20px, 4vw, 44px);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  z-index: 50;
+  box-shadow: 0 -10px 40px rgba(0,0,0,0.3);
+  border-top-left-radius: 20px; border-top-right-radius: 20px;
+  max-height: 50vh; overflow-y: auto;
+}
+.script-overlay.open { transform: translateY(0); }
+.script-overlay-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 14px; border-bottom: 1px solid rgba(255,255,255,0.15);
+  padding-bottom: 14px;
+}
+.script-title { font-weight: 700; font-size: 15px; color: var(--mint-300); }
+.script-close { background: transparent; border: none; color: #fff; cursor: pointer; font-size: 24px; line-height: 1; padding: 0; }
+.script-content { font-size: 16px; line-height: 1.65; color: rgba(255,255,255,0.9); font-weight: 400; }
+.script-toggle-btn {
+  position: fixed; bottom: 26px; left: 50%; transform: translateX(-50%);
+  z-index: 45; background: var(--mint-600); color: #fff;
+  border: 1px solid var(--mint-500); border-radius: 99px; padding: 11px 22px;
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  box-shadow: 0 4px 16px rgba(31,139,100,0.3); display: flex; align-items: center; gap: 8px;
+  transition: all 0.2s ease;
+}
+.script-toggle-btn:hover { background: var(--mint-700); transform: translateX(-50%) translateY(-2px); box-shadow: 0 6px 20px rgba(31,139,100,0.4); }
+
+@media (max-width:1080px){
+  .team-grid{grid-template-columns:repeat(3,1fr)}
+  .prob-cards{grid-template-columns:repeat(2,1fr)}
+}
+@media (max-width:640px){
+  .slide{padding:64px 18px 100px;align-items:flex-start;overflow-y:auto;opacity:1!important;visibility:visible!important;transform:none!important;position:relative;inset:auto;min-height:100vh;border-bottom:1px solid var(--line)}
+  .slide:not(.active){display:flex}
+  .stage{max-height:none}
+  .deck{overflow:visible;position:relative;inset:auto}
+  body{overflow:auto}
+  .sol-grid,.mkt-grid,.two,.prob-cards,.tam-wrap{grid-template-columns:1fr;gap:18px}
+  .team-grid{grid-template-columns:1fr 1fr}
+  .dots,.hint{display:none}
+  .counter{top:auto;bottom:24px;left:18px;right:auto}
+  .brandmark{top:16px}
+  .arrows{bottom:16px;right:16px}
+  .script-toggle-btn{bottom: 16px;}
+  .tam-vis{max-width:240px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.12s!important}
+}
+
+
+/* Round2 competition comparison slide */
+.compare-stage .section-head{margin-bottom:18px}
+.compare-wrap{display:grid;grid-template-columns:minmax(0,1fr);gap:14px}
+.compare-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--white);border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:var(--shadow-sm)}
+.compare-table th{background:#102338;color:white;font-size:14px;font-weight:800;padding:13px 10px;text-align:center;white-space:nowrap}
+.compare-table th:first-child{text-align:left;padding-left:20px}
+.compare-table th.ours{background:linear-gradient(135deg,var(--mint-700),var(--mint-500))}
+.compare-table td{border-top:1px solid var(--line);border-right:1px solid var(--line);padding:12px 10px;text-align:center;font-size:15px;color:var(--ink)}
+.compare-table td:last-child,.compare-table th:last-child{border-right:0}
+.compare-table .metric{display:flex;align-items:center;gap:10px;text-align:left;font-weight:800;line-height:1.22}
+.compare-table .ico{width:28px;height:28px;border-radius:10px;background:var(--mint-100);color:var(--mint-700);display:grid;place-items:center;font-size:17px;flex:0 0 auto}
+.compare-table .ok,.compare-table .no{font-weight:900;font-size:26px;line-height:1}
+.compare-table .ok{color:var(--mint-700)}
+.compare-table .no{color:#1f2b3a;opacity:.78}
+.compare-table .diff{font-weight:800;text-align:left;color:var(--ink);line-height:1.25}
+.compare-flow{display:grid;grid-template-columns:1.05fr repeat(5,1fr);gap:0;background:var(--white);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow-sm);overflow:hidden}
+.compare-flow .flow-title{display:grid;place-items:center;padding:15px 18px;font-weight:900;color:var(--ink);background:linear-gradient(180deg,#f8fffb,#eef8f4);border-right:1px solid var(--line);font-size:22px;line-height:1.15}
+.compare-flow .step{position:relative;display:grid;gap:5px;place-items:center;text-align:center;padding:15px 12px;min-height:92px}
+.compare-flow .step:not(:last-child)::after{content:"→";position:absolute;right:-10px;top:50%;transform:translateY(-50%);font-size:26px;font-weight:900;color:var(--mint-700);z-index:2}
+.compare-flow .step .mini{font-size:26px;line-height:1}
+.compare-flow .step b{font-size:13.5px;line-height:1.25}
+.compare-service-first .compare-table th.ours,.compare-investor .compare-table th.ours{background:linear-gradient(135deg,#0f766e,#34d399)}
+.compare-table-first .compare-table{box-shadow:0 20px 60px rgba(16,35,56,.11)}
+.compare-flow-first .compare-flow{border-color:rgba(43,184,137,.45);box-shadow:0 20px 60px rgba(43,184,137,.13)}
+@media (max-width:900px){
+  .compare-table th,.compare-table td{font-size:11px;padding:8px 6px}
+  .compare-table .metric{gap:6px}
+  .compare-table .ico{display:none}
+  .compare-table .ok,.compare-table .no{font-size:20px}
+  .compare-flow{grid-template-columns:1fr}
+  .compare-flow .flow-title{border-right:0;border-bottom:1px solid var(--line)}
+  .compare-flow .step:not(:last-child)::after{display:none}
+}
+
+
+
+/* Final appendix document slide */
+.appendix-stage{display:grid;grid-template-columns:minmax(280px,.62fr) minmax(360px,.88fr);gap:clamp(24px,3vw,52px);align-items:center}
+.appendix-copy{max-width:520px}
+.appendix-copy .title{max-width:11ch}
+.appendix-copy .sub{max-width:32ch}
+.appendix-frame{height:min(78vh,760px);aspect-ratio:3/4;margin-inline:auto;background:var(--white);border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:0 26px 70px rgba(16,37,34,.18)}
+.appendix-frame img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px;background:white}
+.appendix-note{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:10px 14px;border-radius:999px;background:var(--mint-100);color:var(--mint-800);font-size:13px;font-weight:800;border:1px solid var(--mint-200)}
+@media (max-width:900px){
+  .appendix-stage{grid-template-columns:1fr;gap:18px;padding-top:70px}
+  .appendix-copy .title{max-width:none;font-size:clamp(30px,8vw,48px)}
+  .appendix-frame{height:min(58vh,620px)}
+}
+
+</style>
+</head>
+<body>
+<div class="topbar"><div class="fill" id="fill"></div></div>
+<div class="brandmark"><span class="logo">C</span>CareBridge<span class="on"> AI</span></div>
+<div class="counter"><b id="cur">01</b> / <span id="tot">10</span></div>
+<div class="dots" id="dots"></div>
+<div class="arrows">
+  <button id="prev" aria-label="이전"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <button id="next" aria-label="다음"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg></button>
+</div>
+
+<div class="deck" id="deck">
+
+<!-- ================= SLIDE 1 — COVER ================= -->
+<section class="slide active">
+  <div class="speaker-script" style="display:none;">
+    안녕하십니까. 직장인과 개인을 위한 건강검진 기반 맞춤형 건강 루틴 플랫폼, 케어브릿지 AI입니다. 건강검진 결과는 단순히 확인하고 끝내는 서류가 아닙니다. 우리는 어려운 검진 수치와 의학 용어를 쉬운 일상어로 해석하고, 이를 바탕으로 나와 내 가족이 실천할 수 있는 1:1 맞춤형 건강 루틴을 만들어 드립니다.
+  </div>
+ <div class="stage cover">
+    <div class="bigmark">
+      <div class="glyph"><span>C</span></div>
+      <div class="wordmark">CareBridge<span style="color:var(--mint-600)"> AI</span></div>
+    </div>
+    <div class="eyebrow reveal" data-d="2"><span class="dot"></span>건강검진 결과 해석 & 일상 루틴 형성 플랫폼</div>
+    <h1 class="title reveal" data-d="3">건강검진 결과는 끝이 아니라,<br><span class="mint-grad">건강한 루틴의 시작입니다.</span></h1>
+    <p class="cover-tag reveal" data-d="4">어려운 검진 결과를 쉬운 일상어로 풀고, 나만의 맞춤형 건강 루틴을 만듭니다.</p>
+    <div class="cover-badges reveal" data-d="6">
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>검진 결과 일상어 해석</span>
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="7" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20a6 6 0 0112 0M14 20a5 5 0 017 0"/></svg>맞춤 건강 루틴 연계</span>
+      <span class="badge"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l2.4 6.5L21 9l-5 4 1.8 7L12 16l-5.8 4L8 13 3 9l6.6-.5z"/></svg>복약 및 재검사 리마인더</span>
+    </div>
+ </div>
+</section>
+
+<!-- ================= SLIDE 2 — PROBLEM ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    매년 의무적으로 건강검진을 받지만, 결과를 제대로 활용하는 사람은 드뭅니다. 전문 용어와 수치로 가득한 결과지 앞에서 내 건강 상태를 정확히 이해하기 어렵고, 앞으로 어떤 운동이나 식단을 해야 하는지 구체적인 가이드가 부족합니다. 또한, 처방받은 약의 부작용이나 정확한 복용법을 숙지하지 못해 막연한 불안감을 안고 살아갑니다. 결국 검진 결과는 방치되고, 건강 관리는 일상의 루틴으로 이어지지 않습니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">01 · 문제인식</div>
+      <h2 class="title reveal" data-d="2">매년 받는 건강검진, <span class="mint-grad">결과지 앞에서의 막막함</span></h2>
+      <p class="sub reveal" data-d="3">검진 결과의 의미를 제대로 알지 못해, 건강 관리와 올바른 복약이 일상 루틴으로 이어지지 않습니다.</p>
+    </div>
+    <div class="prob-cards reveal" data-d="4">
+      <div class="prob-card">
+        <img src="./assets/final/problem_01.png" alt="이해하기 어려운 수치" />
+        <div class="prob-card-body">
+          <h3>이해하기 어려운 검진 수치</h3>
+          <p>건강검진을 받아도 숫자가 의미하는 바를 모르고, 각 항목이 왜 중요한지 현재 내 상태가 어떠한지 정확히 파악하기 어렵습니다.</p>
+        </div>
+      </div>
+      <div class="prob-card">
+        <img src="./assets/final/problem_02.png" alt="실천으로 이어지지 않는 가이드" />
+        <div class="prob-card-body">
+          <h3>실천으로 이어지지 않는 가이드</h3>
+          <p>결과지가 있어도 언제 다시 검사를 받아야 할지, 당장 내일부터 운동과 식단을 어떻게 시작해야 할지 구체적인 실행 계획이 막막합니다.</p>
+        </div>
+      </div>
+      <div class="prob-card">
+        <img src="./assets/final/problem_03.png" alt="정확한 복약과 불안감" />
+        <div class="prob-card-body">
+          <h3>정확한 복약과 부작용의 불안감</h3>
+          <p>내가 먹는 약이 어떤 효과가 있는지, 올바른 복용법과 주의할 점은 무엇인지 명확하게 숙지하지 못해 복약 중 불안감을 느낍니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+
+<!-- ================= SLIDE 3 — COMPETITIVE COMPARISON ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    경쟁 서비스는 각자 강점이 있지만 대부분 검진 결과 분석이나 질병 예측 한 영역에 집중되어 있습니다. 케어브릿지 AI는 건강검진 결과를 쉽게 설명하고, 개인 맞춤 건강 처방으로 바꾸며, 지역 건강·복지 서비스 추천과 건강 미션까지 연결합니다. 즉, 결과를 보여주는 서비스가 아니라 실제 행동 변화를 만드는 서비스라는 점이 차별점입니다.
+  </div>
+  <div class="stage compare-stage compare-balanced">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">02 · 경쟁사 비교</div>
+      <h2 class="title reveal" data-d="2">경쟁사 비교 및 차별점</h2>
+      <p class="sub reveal" data-d="3">대부분의 서비스는 검진 결과 분석과 예측에 머무르지만, 우리는 실제 건강 행동과 지역 연계까지 제공합니다.</p>
+    </div>
+    <div class="compare-wrap reveal" data-d="4">
+      <table class="compare-table" aria-label="경쟁사 비교 및 차별점">
+        <thead>
+          <tr>
+            <th>평가 항목</th>
+            <th class="ours">우리 서비스</th>
+            <th>THALOS</th>
+            <th>7POINT1</th>
+            <th>Bionutrion</th>
+            <th>우리 서비스 차별점</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="metric"><span class="ico">▥</span>질병 예측 중심</div></td>
+            <td><span class="ok">✓</span></td><td><span class="ok">✓</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td>
+            <td class="diff">질병 예측 중심</td>
+          </tr>
+          <tr>
+            <td><div class="metric"><span class="ico">◌</span>특정 질환 특화</div></td>
+            <td><span class="ok">✓</span></td><td><span class="no">×</span></td><td><span class="ok">✓</span></td><td><span class="no">×</span></td>
+            <td class="diff">특정 질환 특화</td>
+          </tr>
+          <tr>
+            <td><div class="metric"><span class="ico">◎</span>사용자 행동 변화 유도</div></td>
+            <td><span class="ok">✓</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td><td><span class="ok">✓</span></td>
+            <td class="diff">사용자 행동 변화 유도</td>
+          </tr>
+          <tr>
+            <td><div class="metric"><span class="ico">⌖</span>지역 프로그램 연계</div></td>
+            <td><span class="ok">✓</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td>
+            <td class="diff">지역 프로그램 연계</td>
+          </tr>
+          <tr>
+            <td><div class="metric"><span class="ico">♧</span>전반적인 생활습관 관리</div></td>
+            <td><span class="ok">✓</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td><td><span class="ok">✓</span></td>
+            <td class="diff">전반적인 생활습관 관리</td>
+          </tr>
+          <tr>
+            <td><div class="metric"><span class="ico">▿</span>예방 중심 사후관리</div></td>
+            <td><span class="ok">✓</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td><td><span class="no">×</span></td>
+            <td class="diff">예방 중심 사후관리</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="compare-flow reveal" data-d="5">
+        <div class="flow-title">우리 서비스<br>핵심 차별점</div>
+        <div class="step"><span class="mini">▤</span><b>건강검진</b></div>
+        <div class="step"><span class="mini">AI</span><b>AI 쉬운 설명</b></div>
+        <div class="step"><span class="mini">☑</span><b>개인 맞춤 건강 처방</b></div>
+        <div class="step"><span class="mini">⌖</span><b>지역 건강·복지 서비스 추천<br><small>산림치유, 보건소, 체육시설 등</small></b></div>
+        <div class="step"><span class="mini">▥</span><b>건강 미션 및<br>지속적인 행동 관리</b></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 4 — MARKET (TAM SAM SOM) ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    시장 진입 전략은 확실합니다. 산업안전보건법에 따라 정기적으로 의무 건강검진을 받아야 하는 직장인을 1차 타깃으로 삼습니다. 대한민국 인구 약 5,160만 명 중 60%에 달하는 약 3,100만 명이 잠재적인 건강검진 대상자입니다. 우리는 검진을 받은 직장인들이 첫 번째 고객이 되어 자신의 결과를 쉽게 이해하고 루틴을 형성하게 한 뒤, 점진적으로 전체 국민의 일상적인 건강 관리 시장으로 영역을 넓혀갈 것입니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">03 · 시장기회</div>
+      <h2 class="title reveal" data-d="2">직장인 건강검진 의무화, <span class="mint-grad">확실한 초기 타깃 시장</span></h2>
+      <p class="sub reveal" data-d="3">매년 실시되는 기업 의무 건강검진을 시작으로 전 국민 건강 관리 시장으로 확장합니다.</p>
+    </div>
+    
+    <div class="tam-wrap" style="margin-bottom:18px">
+      <div class="tam-vis reveal" data-d="4">
+        <div class="ring tam"><span class="lab">TAM</span></div>
+        <div class="ring sam"><span class="lab">SAM</span></div>
+        <div class="ring som" style="place-items:center"><span class="lab" style="margin:0">SOM</span></div>
+      </div>
+      <div class="tam-list">
+        <div class="tam-item reveal" data-d="5">
+          <div class="k">TAM</div>
+          <div class="v"><b>대한민국 총 인구</b><p>약 5,160만 명 (2026년 기준 전체 국민 건강 관리 대상)</p></div>
+        </div>
+        <div class="tam-item reveal" data-d="6">
+          <div class="k">SAM</div>
+          <div class="v"><b>건강검진 대상 인구</b><p>약 3,100만 명 (전체 인구의 약 60%)</p></div>
+        </div>
+        <div class="tam-item reveal" data-d="7">
+          <div class="k">SOM</div>
+          <div class="v"><b>의무 수검 대상 직장인</b><p>산업안전보건법에 따라 정기 검진을 받는 사무직 및 비사무직 노동자</p></div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tam-callout reveal" data-d="8">
+      <div style="font-family:var(--mono);font-weight:700;margin-bottom:8px;color:var(--mint-700)">시장 규모 산정 기준 및 진입 근거</div>
+      <ul>
+        <li><b>초기 타깃 확보 근거:</b> 산업안전보건법 제197조 (일반건강진단: 사무직 2년에 1회, 비사무직 매년 1회 의무)</li>
+        <li><b>통계 출처:</b> 통계청(KOSIS) 2026년 장래인구추계 및 국민건강보험공단 2024년 일반건강검진 수검률 데이터</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 4 — SOLUTION 1 ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    케어브릿지 AI의 메인 화면입니다. 여기서 사용자는 건강검진표 분석 결과와 건강상태 요약을 한눈에 확인하고, 나에게 필요한 운동 가이드부터 주변 운동 시설까지 통합적으로 확인할 수 있습니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">04 · 핵심솔루션 1/4</div>
+      <h2 class="title reveal" data-d="2">건강 상태를 한눈에, <span class="mint-grad">직관적인 앱 메인 화면</span></h2>
+      <p class="sub reveal" data-d="3">건강검진표 분석, 건강상태 요약 및 운동 가이드, 주변 운동 시설을 한 화면에서 확인합니다.</p>
+    </div>
+    <div class="sol-grid">
+      <div class="reveal" data-d="4">
+        <div class="phone-mockup">
+          <img src="./assets/final/solution_01_left_phone.png" alt="건강검진표 분석 및 건강상태 요약 메인 화면" />
+        </div>
+      </div>
+      <div class="sol-list">
+        <div class="sol-item reveal" data-d="5">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 21l-4.3-4.3M11 18a7 7 0 100-14 7 7 0 000 14z"/></svg></span> 건강검진표 분석 및 건강상태 요약</h4>
+          <p>어플 메인 화면에서 나의 건강검진표를 바탕으로 분석된 핵심 건강상태 요약을 즉시 파악할 수 있습니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="6">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg></span> 운동 가이드 및 일상 루틴 연결</h4>
+          <p>현재 상태에 맞는 최적의 운동 가이드를 확인하고, 내일부터 당장 실천할 수 있는 건강 루틴을 제시받습니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="7">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span> 주변 운동 시설 확인</h4>
+          <p>내 주변의 운동 시설 위치와 정보를 한눈에 제공하여 건강 목표 달성을 위한 접근성을 극대화합니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 5 — SOLUTION 2 ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    다음은 개인 맞춤형 가이드입니다. 건강검진 결과지를 바탕으로 각 수치가 의미하는 바를 일상어로 쉽게 설명해 줍니다. 또한 개인의 상태에 맞춘 추가 검진을 제안하고, 현재 먹고 있는 약이 무엇인지, 약을 어떻게 먹어야 하는지, 그리고 주의해야 할 복용 정보는 무엇인지 명확하게 안내합니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">04 · 핵심솔루션 2/4</div>
+      <h2 class="title reveal" data-d="2">쉬운 결과 해석과 <span class="mint-grad">맞춤형 검진·복약 가이드</span></h2>
+      <p class="sub reveal" data-d="3">검진 수치의 의미를 쉽게 이해하고, 나에게 꼭 필요한 검진과 복약 정보를 얻습니다.</p>
+    </div>
+    <div class="sol-grid">
+      <div class="sol-list">
+        <div class="sol-item reveal" data-d="4">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M4 4h16v12H4z"/><path d="M4 20h16M9 16v4M15 16v4"/></svg></span> 건강검진 수치 설명 및 해석</h4>
+          <p>어려운 의학 용어 대신 각 숫자가 의미하는 바와 왜 중요한지, 현재 건강 상태가 어느 수준인지 명확한 일상어로 해설합니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="5">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></span> 맞춤형 추가 검진 제안</h4>
+          <p>사용자의 연령, 성별, 과거 결과 및 위험 요소를 종합적으로 분석하여 앞으로 받아야 할 적절한 건강검진 항목을 제안합니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="6">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg></span> 먹고 있는 약 및 복용 정보 확인</h4>
+          <p>내가 먹고 있는 약이 무엇인지, 어떻게 먹어야 하는지 알려주며, 주의해야 할 복용 정보까지 꼼꼼히 안내합니다.</p>
+        </div>
+      </div>
+      <div class="reveal" data-d="7">
+        <div class="phone-mockup">
+          <img src="./assets/final/solution_01_right_phone.png" alt="맞춤형 검진 및 복약 가이드" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 6 — SOLUTION 3 ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    세 번째 솔루션은 매일의 실천과 알림입니다. 검진 결과를 바탕으로 나와 내 가족이 함께 할 수 있는 일상적인 건강 루틴 연계를 돕습니다. 또한 혼자서는 챙기기 힘든 재검사 및 병원 방문 일정과 안전한 복약 관리 리마인더를 제공하여 예방의 시기를 놓치지 않게 합니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">04 · 핵심솔루션 3/4</div>
+      <h2 class="title reveal" data-d="2">매일의 실천을 돕는 <span class="mint-grad">루틴 연계 및 리마인더</span></h2>
+      <p class="sub reveal" data-d="3">검진 결과를 실천 가능한 루틴으로 연결하고, 놓치기 쉬운 일정과 약 복용을 앱이 챙겨줍니다.</p>
+    </div>
+    <div class="sol-grid">
+      <div class="reveal" data-d="4">
+        <div class="phone-mockup">
+          <img src="./assets/final/solution_02_left_phone.png" alt="건강 루틴 관리 및 리마인더 화면" />
+        </div>
+      </div>
+      <div class="sol-list">
+        <div class="sol-item reveal" data-d="5">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></span> 1:1 맞춤형 건강 루틴 연계</h4>
+          <p>검진 데이터를 기반으로 내 상태에 딱 맞는 운동 종류와 강도, 식단 관리법 등을 추천하여 자연스러운 루틴 형성을 돕습니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="6">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span> 적기 재검사 및 병원 방문 알림</h4>
+          <p>바쁜 직장 생활 속에서 놓치기 쉬운 추적 관찰 시기와 다음 검진 일정을 리마인더로 챙겨주어 질환 예방의 시기를 놓치지 않게 합니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="7">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg></span> 안전한 복약 관리 리마인더</h4>
+          <p>규칙적인 복약 시간을 꼼꼼히 알려주고, 약물 복용 시 주의해야 할 사항이나 중복 복용 위험을 사전에 인지하여 안전을 지켜줍니다.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 7 — SOLUTION 4 ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    더 나아가 앱 내에서 형성된 건강 루틴을 오프라인으로 이어줍니다. 사용자의 건강 상태와 필요에 맞춘 지역 제휴 서비스를 통해 거주지나 직장 주변의 지역 건강 시설, 헬스장, 필라테스 등을 추천하여 즉각적인 건강 관리가 가능하도록 지원합니다. B2C 중심의 가치에서 출발해 B2B 파트너십을 다지는 중요한 고리입니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">04 · 핵심솔루션 4/4</div>
+      <h2 class="title reveal" data-d="2">오프라인으로 이어지는 <span class="mint-grad">지역 제휴 서비스</span></h2>
+      <p class="sub reveal" data-d="3">지역 제휴 서비스 - 지역 건강 시설, 헬스장, 필라테스 등 추천을 통해 오프라인 실천을 돕습니다.</p>
+    </div>
+    <div class="sol-grid">
+      <div class="sol-list">
+        <div class="sol-item reveal" data-d="4">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg></span> 지역 건강 시설 및 헬스장 추천</h4>
+          <p>사용자의 루틴과 위치를 기반으로 거주지 및 직장 주변의 검증된 지역 건강 시설과 헬스장을 추천하여 운동의 접근성을 높입니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="5">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg></span> 맞춤형 필라테스 및 특화 운동 연계</h4>
+          <p>체형 교정이나 전문적인 재활 훈련이 필요한 사용자를 위해, 검증된 지역 제휴 서비스(필라테스, 요가 등)를 매칭해 줍니다.</p>
+        </div>
+        <div class="sol-item reveal" data-d="6">
+          <h4><span class="feat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg></span> 온·오프라인 통합 건강 관리 경험</h4>
+          <p>개인의 건강검진 데이터에서 시작된 루틴 제안이 지역 파트너십을 통해 실제 방문과 지속적인 운동 실천으로 이어집니다.</p>
+        </div>
+      </div>
+      <div class="reveal" data-d="7">
+        <div class="phone-mockup">
+          <img src="./assets/final/solution_02_right_phone.png" alt="지역 제휴 서비스 및 시설 추천" />
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= SLIDE 8 — BUSINESS MODEL ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    수익 모델은 철저하게 B2C 기반에서 출발해 점진적으로 확장하는 구조입니다. 초기에는 개인 사용자에 집중하여 건별 검진 결과 분석, 루틴 연계, 프리미엄 구독으로 안정적인 매출을 확보합니다. 이후 사용자의 데이터를 기반으로 지역 헬스장, 검진센터, 기업 복지 프로그램과 연계하는 B2B 모델로 수익을 다각화하며, 궁극적으로는 보건소 및 노인 건강관리 사업 등 공공 B2G 생태계로 확장할 계획입니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">04 · 수익구조</div>
+      <h2 class="title reveal" data-d="2">확실한 B2C 기반에서 <span class="mint-grad">B2B, B2G로의 유연한 확장</span></h2>
+      <p class="sub reveal" data-d="3">개인 유저 중심의 단단한 과금 체계를 바탕으로 기업과 공공 부문 생태계로 비즈니스를 확장합니다.</p>
+    </div>
+    
+    <div class="rev-hierarchy">
+      <div class="rev-box b2c reveal" data-d="4">
+        <div class="rev-title">B2C (개인 사용자)</div>
+        <div class="rev-items">
+          <span class="rev-item">건별 AI 건강검진 결과 분석</span>
+          <span class="rev-item">건강 관리 / 운동 루틴 연계</span>
+          <span class="rev-item">프리미엄 구독</span>
+          <span class="rev-item">의료진 검수 서비스</span>
+        </div>
+      </div>
+      <div class="rev-arrow reveal" data-d="5">↓</div>
+      <div class="rev-box reveal" data-d="6">
+        <div class="rev-title">B2B (기업 및 제휴)</div>
+        <div class="rev-items">
+          <span class="rev-item">지역 제휴 서비스 (지역 건강 시설, 헬스장, 필라테스 등)</span>
+          <span class="rev-item">병원·검진센터 SaaS</span>
+          <span class="rev-item">보험사 및 기업 복지 프로그램</span>
+        </div>
+      </div>
+      <div class="rev-arrow reveal" data-d="7">↓</div>
+      <div class="rev-box reveal" data-d="8">
+        <div class="rev-title">B2G (공공 부문)</div>
+        <div class="rev-items">
+          <span class="rev-item">보험사 / 기업 복지 패키지 참여</span>
+          <span class="rev-item">공공 디지털 헬스케어 사업 (보건소, 복지관 등)</span>
+          <span class="rev-item">노인 건강관리 프로그램 연계</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= SLIDE 10 — GTM ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    시장 진입 전략은 의무 수검 직장인을 첫 번째 타깃으로 삼습니다. 검진 직후 사용자가 자신의 결과를 이해하고 싶은 순간을 잡아 초기 유입을 만들고, 기업 HR 및 웰니스 채널로 확장합니다. 이후 건강, 헬스, 유튜버 협업으로 신뢰도 높은 콘텐츠 유입을 만들고, 자체 인스타그램 1만 페이지를 활용해 후기와 루틴 챌린지를 빠르게 확산하겠습니다.
+  </div>
+  <div class="stage">
+    <div class="section-head">
+      <div class="kicker reveal" data-d="1">06 · 시장진입전략</div>
+      <h2 class="title reveal" data-d="2">의무 수검 직장인에서 <span class="mint-grad">콘텐츠 기반 확산 채널로</span></h2>
+      <p class="sub reveal" data-d="3">직장인 건강검진 의무 수요를 바탕으로 초기 진입하고, 기업 채널과 콘텐츠 채널을 차례로 넓혀갑니다.</p>
+    </div>
+    <div class="two">
+      <div class="trac">
+        <div class="trac-item reveal" data-d="4">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div>
+            <b>1. 의무 수검 직장인 유입 확보</b>
+            <p>법정 의무 건강검진 대상자인 기업 근로자를 최우선 타깃으로 하여 검진 직후 자연스러운 유입을 창출합니다.</p>
+          </div>
+        </div>
+        <div class="trac-item reveal" data-d="5">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div>
+            <b>2. 기업 HR 및 웰니스 채널 연계</b>
+            <p>개인 단위의 활성화 지표를 기반으로 기업의 사내 복지 채널 및 웰니스 프로그램(B2B)과 연동합니다.</p>
+          </div>
+        </div>
+        <div class="trac-item reveal" data-d="6">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div>
+            <b>3. 건강·헬스·유튜버 협업</b>
+            <p>건강관리, 헬스, 운동 분야 유튜버와 협업해 검진 결과 해석과 루틴 형성 사용 사례를 콘텐츠로 확산합니다.</p>
+          </div>
+        </div>
+        <div class="trac-item reveal" data-d="7">
+          <span class="check"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div>
+            <b>4. 자체 인스타그램 1만 페이지 활용</b>
+            <p>이미 확보한 1만 규모 인스타그램 페이지를 활용해 초기 사용자 유입, 후기 콘텐츠, 루틴 챌린지를 빠르게 검증합니다.</p>
+          </div>
+        </div>
+      </div>
+      <div class="trac-badges">
+        <div class="tb reveal" data-d="5">
+          <div class="t">Clear First User Value</div>
+          <div class="d">직장인 개인이 스스로 자신의 검진 결과를 파악하고 싶어 하는 핵심 니즈를 먼저 해결합니다.</div>
+        </div>
+        <div class="tb reveal" data-d="6">
+          <div class="t">Creator & Owned Channel</div>
+          <div class="d">건강·헬스 크리에이터 협업과 자체 인스타그램 채널을 결합해 빠른 유입과 신뢰를 동시에 만듭니다.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    마지막으로 케어브릿지 AI를 만들어가는 팀을 소개합니다. 연세대학교 미래캠퍼스 학생들로 구성된 저희는 비즈니스, 의공학, 디지털 헬스케어를 전공한 융합 인재들입니다. 환자와 사용자의 관점에서 비즈니스를 기획하고, 의료 지식과 제품 역량을 결합하여 건강검진 결과를 건강한 일상 루틴으로 바꾸는 혁신을 만들어내겠습니다. 감사합니다.
+  </div>
+  <div class="stage">
+    <div class="section-head" style="text-align:center; align-items:center; margin-bottom:34px;">
+      <div class="kicker reveal" data-d="1">07 · 팀소개</div>
+      <h2 class="title reveal" data-d="2" style="max-width:20ch">B2C 헬스케어 혁신을 이끌 <span class="mint-grad">융합형 팀 역량</span></h2>
+      <p class="sub reveal" data-d="3">비즈니스 기획부터 바이오메디컬 도메인 이해, 개인화 프로덕트 설계까지 갖춘 최적의 실행 팀입니다.</p>
+    </div>
+    
+    <div class="team-grid reveal" data-d="4">
+      <div class="member" style="background:linear-gradient(165deg,var(--mint-100),var(--white));border-color:var(--mint-200)">
+        <div class="av">조</div>
+        <div class="role">조령찬</div>
+        <div class="meta">연세대 경영학</div>
+        <div class="desc">Business / IR<br>비즈니스 모델 기획</div>
+      </div>
+      <div class="member">
+        <div class="av">박</div>
+        <div class="role">박형빈</div>
+        <div class="meta">연세대 의공학부</div>
+        <div class="desc">Biomedical<br>의료 도메인 분석</div>
+      </div>
+      <div class="member">
+        <div class="av">김</div>
+        <div class="role">김한</div>
+        <div class="meta">연세대 디지털헬스케어학부</div>
+        <div class="desc">Product Mgmt<br>의료 데이터 아키텍처</div>
+      </div>
+      <div class="member">
+        <div class="av">박</div>
+        <div class="role">박성현</div>
+        <div class="meta">연세대 디지털헬스케어학부</div>
+        <div class="desc">UX Design<br>시니어 친화적 설계</div>
+      </div>
+      <div class="member">
+        <div class="av">최</div>
+        <div class="role">최예원</div>
+        <div class="meta">연세대 디지털헬스케어학부</div>
+        <div class="desc">Policy & Ops<br>서비스 정책·운영</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ================= SLIDE 12 — DOCUMENT SAMPLE ================= -->
+<section class="slide">
+  <div class="speaker-script" style="display:none;">
+    마지막으로 실제 건강검진표는 이렇게 복잡한 표와 수치로 구성되어 있습니다. 케어브릿지 AI는 이런 문서를 사용자가 이해할 수 있는 설명과 실행 가능한 루틴으로 바꾸는 서비스입니다.
+  </div>
+  <div class="stage appendix-stage">
+    <div class="appendix-copy">
+      <div class="kicker reveal" data-d="1">08 · 문서 예시</div>
+      <h2 class="title reveal" data-d="2">복잡한 검진표를 <span class="mint-grad">실행 가능한 건강 루틴으로</span></h2>
+      <p class="sub reveal" data-d="3">수치와 전문용어로 가득한 검사지를 AI가 읽고, 사용자가 이해할 수 있는 설명과 행동 계획으로 전환합니다.</p>
+      <div class="appendix-note reveal" data-d="4">실제 검진표 형태를 크게 보여주는 최종 참고 슬라이드</div>
+    </div>
+    <figure class="appendix-frame reveal" data-d="5">
+      <img src="./assets/final_appendix_scribd.jpg" alt="건강검진표 원본 예시" />
+    </figure>
+  </div>
+</section>
+
+</div>
+
+<script>
+(function(){
+  const deck = document.getElementById('deck');
+  const slides = [...deck.querySelectorAll('.slide')];
+  const total = slides.length;
+  let idx = 0, busy = false;
+  const fill = document.getElementById('fill');
+  const cur = document.getElementById('cur');
+  const dotsWrap = document.getElementById('dots');
+  document.getElementById('tot').textContent = String(total).padStart(2,'0');
+
+  // Create navigation dots
+  slides.forEach((_, i) => {
+    const b = document.createElement('button');
+    b.setAttribute('aria-label', `Slide ${i+1}`);
+    b.onclick = () => go(i);
+    dotsWrap.appendChild(b);
+  });
+  const dots = [...dotsWrap.querySelectorAll('button')];
+
+  // Overlay construction
+  const overlay = document.createElement('div');
+  overlay.className = 'script-overlay';
+  overlay.innerHTML = `
+    <div class="script-overlay-head">
+      <span class="script-title">발표 스크립트</span>
+      <button class="script-close" aria-label="닫기">&times;</button>
+    </div>
+    <div class="script-content" id="script-content">대본이 없습니다.</div>
+  `;
+  document.body.appendChild(overlay);
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.hidden = true;
+  let overlayOpen = false;
+  overlay.querySelector('.script-close').onclick = () => {
+    overlayOpen = false;
+    overlay.classList.remove('open');
+  };
+
+  function updateScript() {
+    const sc = slides[idx].querySelector('.speaker-script');
+    document.getElementById('script-content').innerHTML = sc ? sc.innerHTML : '이 슬라이드에는 발표 스크립트가 없습니다.';
+  }
+
+  // Navigation Logic
+  function go(n) {
+    if (busy || n < 0 || n >= total || n === idx) return;
+    busy = true;
+    
+    slides[idx].className = 'slide ' + (n > idx ? 'prev' : 'next');
+    idx = n;
+    
+    // reset incoming slide state
+    slides[idx].className = 'slide ' + (n > idx ? 'next' : 'prev');
+    // force reflow
+    void slides[idx].offsetWidth;
+    
+    slides[idx].className = 'slide active';
+    
+    dots.forEach((d, i) => d.classList.toggle('on', i === idx));
+    cur.textContent = String(idx + 1).padStart(2,'0');
+    fill.style.width = ((idx + 1) / total * 100) + '%';
+    
+    updateScript();
+    
+    setTimeout(() => { busy = false; }, 650);
+  }
+
+  // Event Listeners for slide navigation
+  document.getElementById('prev').addEventListener('click', () => go(idx - 1));
+  document.getElementById('next').addEventListener('click', () => go(idx + 1));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === ' ') go(idx + 1);
+    if (e.key === 'ArrowLeft') go(idx - 1);
+  });
+  window.addEventListener('wheel', e => {
+    if (Math.abs(e.deltaY) > 40) go(e.deltaY > 0 ? idx + 1 : idx - 1);
+  }, {passive:true});
+
+  // Initialize
+  dots[0].classList.add('on');
+  fill.style.width = (1 / total * 100) + '%';
+  updateScript();
+
+})();
+</script>
+</body>
+</html>
