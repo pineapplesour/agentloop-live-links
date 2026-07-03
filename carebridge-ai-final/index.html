@@ -361,17 +361,12 @@ h2.title{
 
 
 /* Final appendix document slide */
-.appendix-stage{display:grid;grid-template-columns:minmax(280px,.62fr) minmax(360px,.88fr);gap:clamp(24px,3vw,52px);align-items:center}
-.appendix-copy{max-width:520px}
-.appendix-copy .title{max-width:11ch}
-.appendix-copy .sub{max-width:32ch}
-.appendix-frame{height:min(78vh,760px);aspect-ratio:3/4;margin-inline:auto;background:var(--white);border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:0 26px 70px rgba(16,37,34,.18)}
+.appendix-stage{display:grid;place-items:center}
+.appendix-frame{height:min(84vh,820px);aspect-ratio:3/4;margin-inline:auto;background:var(--white);border:1px solid var(--line);border-radius:22px;padding:12px;box-shadow:0 26px 70px rgba(16,37,34,.18)}
 .appendix-frame img{width:100%;height:100%;object-fit:contain;display:block;border-radius:14px;background:white}
-.appendix-note{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:10px 14px;border-radius:999px;background:var(--mint-100);color:var(--mint-800);font-size:13px;font-weight:800;border:1px solid var(--mint-200)}
 @media (max-width:900px){
-  .appendix-stage{grid-template-columns:1fr;gap:18px;padding-top:70px}
-  .appendix-copy .title{max-width:none;font-size:clamp(30px,8vw,48px)}
-  .appendix-frame{height:min(58vh,620px)}
+  .appendix-stage{padding-top:58px}
+  .appendix-frame{height:min(72vh,680px)}
 }
 
 </style>
@@ -851,17 +846,9 @@ h2.title{
 
 <!-- ================= SLIDE 12 — DOCUMENT SAMPLE ================= -->
 <section class="slide">
-  <div class="speaker-script" style="display:none;">
-    마지막으로 실제 건강검진표는 이렇게 복잡한 표와 수치로 구성되어 있습니다. 케어브릿지 AI는 이런 문서를 사용자가 이해할 수 있는 설명과 실행 가능한 루틴으로 바꾸는 서비스입니다.
-  </div>
+  <div class="speaker-script" style="display:none;"></div>
   <div class="stage appendix-stage">
-    <div class="appendix-copy">
-      <div class="kicker reveal" data-d="1">08 · 문서 예시</div>
-      <h2 class="title reveal" data-d="2">복잡한 검진표를 <span class="mint-grad">실행 가능한 건강 루틴으로</span></h2>
-      <p class="sub reveal" data-d="3">수치와 전문용어로 가득한 검사지를 AI가 읽고, 사용자가 이해할 수 있는 설명과 행동 계획으로 전환합니다.</p>
-      <div class="appendix-note reveal" data-d="4">실제 검진표 형태를 크게 보여주는 최종 참고 슬라이드</div>
-    </div>
-    <figure class="appendix-frame reveal" data-d="5">
+    <figure class="appendix-frame reveal" data-d="1">
       <img src="./assets/final_appendix_scribd.jpg" alt="건강검진표 원본 예시" />
     </figure>
   </div>
