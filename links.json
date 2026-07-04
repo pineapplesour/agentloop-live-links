@@ -1,12 +1,19 @@
 {
-  "generatedAt": "2026-06-29T14:50:57+09:00",
+  "generatedAt": "2026-07-04T17:25:00+09:00",
   "tunnelBase": "https://psykey.ai.kr/agent-live",
-  "adapterVersion": "20260627-atrium-live-chat-5",
+  "adapterVersion": "20260704-ralfi-prod-dev-links",
   "groups": [
     {
       "title": "바로 확인",
       "description": "공유용으로 먼저 열어볼 안정 경로입니다.",
       "items": [
+        {
+          "id": "maeum-atrium",
+          "title": "랄피 3D 아트리움 운영본",
+          "href": "https://psykey.ai.kr/agent-live/maeum-atrium.html?modelProvider=gemini-live",
+          "status": "live",
+          "note": "운영 고정 링크 · 최신 검증본 · 수정용 터널과 분리"
+        },
         {
           "id": "ralph-live",
           "title": "랄피 Live",
@@ -34,11 +41,11 @@
       "title": "작업중",
       "items": [
         {
-          "id": "maeum-atrium",
-          "title": "아트리움 상담실",
-          "href": "https://psykey.ai.kr/agent-live/maeum-atrium.html?modelProvider=gemini-live",
+          "id": "maeum-atrium-dev",
+          "title": "랄피 3D 아트리움 수정용",
+          "href": "https://minutes-usb-learners-petersburg.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live&dev=1",
           "status": "work",
-          "note": "3D 아트리움"
+          "note": "수정/검증용 Cloudflare 터널 · 운영 아님 · 끊길 수 있음"
         }
       ]
     }
