@@ -183,13 +183,13 @@ h2.title{
 .cover-tag{font-size:clamp(17px,1.7vw,22px);line-height:1.5;color:var(--ink-soft);font-weight:500;}
 
 /* ============ CUSTOM LAYOUTS ============ */
-.prob-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 14px; }
+.prob-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(16px, 1.3889vw, 24px); margin-top: clamp(11px, .9722vw, 18px); }
 .prob-card { background: var(--white); border: 1px solid var(--line); border-radius: 18px; overflow: hidden; box-shadow: var(--shadow-sm); display: flex; flex-direction: column; transition: transform 0.25s, box-shadow 0.25s; }
 .slide.active .prob-card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); }
-.prob-card img { width: 100%; height: 210px; object-fit: cover; object-position: top; border-bottom: 1px solid var(--line); }
-.prob-card-body { padding: 18px; }
-.prob-card-body h3 { font-size: 16px; font-weight: 700; margin-bottom: 8px; color: var(--mint-700); }
-.prob-card-body p { font-size: 13.5px; color: var(--ink-faint); line-height: 1.55; }
+.prob-card img { width: 100%; height: clamp(176px, 23.3333vh, 250px); object-fit: cover; object-position: top; border-bottom: 1px solid var(--line); }
+.prob-card-body { padding: clamp(15px, 1.25vw, 22px); }
+.prob-card-body h3 { font-size: clamp(14px, 1.1111vw, 18px); font-weight: 700; margin-bottom: clamp(7px, .5556vw, 10px); color: var(--mint-700); }
+.prob-card-body p { font-size: clamp(12px, .9375vw, 15.5px); color: var(--ink-faint); line-height: 1.55; }
 
 .sol-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 36px; align-items: center; }
 .sol-list { display: flex; flex-direction: column; gap: 14px; }
@@ -296,6 +296,7 @@ h2.title{
   .deck{overflow:visible;position:relative;inset:auto}
   body{overflow:auto}
   .sol-grid,.mkt-grid,.two,.prob-cards,.tam-wrap{grid-template-columns:1fr;gap:18px}
+  .prob-card img{height:clamp(190px, 56vw, 260px)}
   .team-grid{grid-template-columns:1fr 1fr}
   .dots,.hint{display:none}
   .counter{top:auto;bottom:24px;left:18px;right:auto}
@@ -415,7 +416,7 @@ h2.title{
         </div>
       </div>
       <div class="prob-card">
-        <img src="./assets/final/problem_03_medication.jpg" alt="정확한 복약과 불안감" />
+        <img src="./assets/final/problem_03_medication.jpg" data-backup-src="./assets/final/problem_03.png" alt="정확한 복약과 불안감" />
         <div class="prob-card-body">
           <h3>정확한 복약과 부작용의 불안감</h3>
           <p>내가 먹는 약이 어떤 효과가 있는지, 올바른 복용법과 주의할 점은 무엇인지 명확하게 숙지하지 못해 복약 중 불안감을 느낍니다.</p>
