@@ -246,12 +246,16 @@ h2.title{
 .tb .d{font-size:12.5px;color:var(--ink-faint);margin-top:4px}
 .two{display:grid;grid-template-columns:1.2fr 0.8fr;gap:clamp(18px,2vw,30px);align-items:start}
 
-.team-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; }
-.member{background:var(--white);border:1px solid var(--line);border-radius:16px;padding:16px;box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;text-align:center;}
-.member .av{width:48px;height:48px;border-radius:14px;background:linear-gradient(135deg,var(--mint-400),var(--mint-600));color:#fff;font-weight:800;display:grid;place-items:center;font-size:18px;margin:0 auto 8px;}
-.member .role{font-size:15.5px;font-weight:700}
-.member .meta{font-size:11.5px;color:var(--mint-600);font-family:var(--mono);font-weight:600}
-.member .desc{font-size:12px;color:var(--ink-faint);line-height:1.5;margin-top:4px;}
+.team-grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: clamp(9px, .972vw, 14px); align-items: stretch; }
+.member{background:linear-gradient(165deg,var(--mint-100),var(--white));border:1px solid var(--mint-200);border-radius:16px;padding:clamp(12px,1.111vw,16px);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;gap:8px;text-align:left;min-width:0;}
+.member .meta{font-size:clamp(9.5px,.799vw,11.5px);color:var(--mint-600);font-family:var(--mono);font-weight:700;line-height:1.25;min-height:2.5em;}
+.member-head{display:flex;align-items:center;gap:10px;min-width:0;}
+.member .av{width:42px;height:42px;border-radius:13px;background:linear-gradient(135deg,var(--mint-400),var(--mint-600));color:#fff;font-weight:800;display:grid;place-items:center;font-size:17px;flex:0 0 auto;}
+.member .role{font-size:clamp(14px,1.076vw,15.5px);font-weight:800;line-height:1.2}
+.member .desc{font-size:clamp(10.2px,.833vw,12px);color:var(--ink-faint);line-height:1.35;margin-top:3px;}
+.member .highlights{list-style:none;display:flex;flex-direction:column;gap:5px;margin-top:2px;min-width:0;}
+.member .highlights li{font-size:clamp(9.4px,.729vw,10.5px);line-height:1.32;color:var(--ink-soft);background:rgba(239,248,244,.74);border:1px solid rgba(185,222,207,.62);border-radius:9px;padding:5px 6px;}
+.member .highlights li strong{color:var(--mint-700);font-weight:800}
 
 /* Script overlay CSS */
 .script-overlay {
@@ -794,35 +798,98 @@ h2.title{
     </div>
     
     <div class="team-grid reveal" data-d="4">
-      <div class="member" style="background:linear-gradient(165deg,var(--mint-100),var(--white));border-color:var(--mint-200)">
-        <div class="av">조</div>
-        <div class="role">조령찬</div>
-        <div class="meta">연세대 경영학</div>
-        <div class="desc">Business / IR<br>비즈니스 모델 기획</div>
+      <div class="member">
+        <div class="meta">연세대학교 미래캠퍼스 경영학부</div>
+        <div class="member-head">
+          <div class="av">조</div>
+          <div>
+            <div class="role">조령찬</div>
+            <div class="desc">Business / IR<br>비즈니스 모델 기획</div>
+          </div>
+        </div>
+        <ul class="highlights">
+          <li><strong>MEDICI</strong> 창업 해커톤 캠프 대상</li>
+          <li>MEDICI 창업 동아리 선정</li>
+          <li>연세원주창업보육센터 원주창업레이커스쿨 수료</li>
+          <li>미래공작소 메이커스페이스 동아리 선정</li>
+          <li>RISE사업단 WAVE LAB 기술창업 선정</li>
+          <li>RISE사업단 WAVE LAB 시제품 지원사업 선정</li>
+          <li>하나은행 하나소셜벤처 유니버시티 합격 및 수료</li>
+          <li>연세대학교 미래캠퍼스 NVIDIA AI 솔루션 대회 금상</li>
+        </ul>
       </div>
       <div class="member">
-        <div class="av">박</div>
-        <div class="role">박형빈</div>
-        <div class="meta">연세대 의공학부</div>
-        <div class="desc">Biomedical<br>의료 도메인 분석</div>
+        <div class="meta">연세대학교 미래캠퍼스 의공학부</div>
+        <div class="member-head">
+          <div class="av">박</div>
+          <div>
+            <div class="role">박형빈</div>
+            <div class="desc">Biomedical<br>의료 도메인 분석</div>
+          </div>
+        </div>
+        <ul class="highlights">
+          <li>의공학 기반 의료 도메인 분석 및 문제정의 역량</li>
+          <li>의료기기·생체신호·헬스케어 데이터 이해 기반 제품 기획</li>
+          <li>AI·데이터 기반 헬스케어 서비스 프로토타입 설계 경험</li>
+          <li>의료 현장 문제를 디지털 서비스 요구사항으로 전환하는 역량</li>
+          <li>건강검진·복약 관리 서비스의 의료적 타당성 검토 역량</li>
+        </ul>
       </div>
       <div class="member">
-        <div class="av">김</div>
-        <div class="role">김한</div>
-        <div class="meta">연세대 디지털헬스케어학부</div>
-        <div class="desc">Product Mgmt<br>의료 데이터 아키텍처</div>
+        <div class="meta">연세대학교 미래캠퍼스 디지털헬스케어학부</div>
+        <div class="member-head">
+          <div class="av">김</div>
+          <div>
+            <div class="role">김한</div>
+            <div class="desc">Product Mgmt<br>의료 데이터 아키텍처</div>
+          </div>
+        </div>
+        <ul class="highlights">
+          <li>WAVE-LAB 2026 Magabite 참여</li>
+          <li>모말찬 프로젝트 표지 디자인 참여</li>
+          <li>사용자 중심 UI/UX 설계 및 웹 서비스 화면 구성 경험</li>
+          <li>AI·데이터 기반 서비스 기획 및 프로토타입 설계 경험</li>
+          <li>의료 데이터 기반 대시보드 화면 구성 및 정보 구조 설계 경험</li>
+        </ul>
       </div>
       <div class="member">
-        <div class="av">박</div>
-        <div class="role">박성현</div>
-        <div class="meta">연세대 디지털헬스케어학부</div>
-        <div class="desc">UX Design<br>시니어 친화적 설계</div>
+        <div class="meta">연세대학교 미래캠퍼스 디지털헬스케어학부</div>
+        <div class="member-head">
+          <div class="av">박</div>
+          <div>
+            <div class="role">박성현</div>
+            <div class="desc">UX Design<br>시니어 친화적 설계</div>
+          </div>
+        </div>
+        <ul class="highlights">
+          <li>2025~2026 인공지능 분할 모델 기반 좌심실 박출률 추정 연구 참여</li>
+          <li>2025 연세 산학연 스펙UP Festival 창업 부문 대상</li>
+          <li>2025 WAVE 기술창업 아이디어 해커톤 대회 대상</li>
+          <li>2025 WAVE 기술창업 IR데모데이 우수상</li>
+          <li>의료AI 반도체인력양성사업 산학연구 우수 연구</li>
+          <li>2025 글로벌 기술창업 액셀러레이팅 캠프(항저우) 참여</li>
+          <li>2025 동북권 ICT 이노베이션스퀘어 인공지능 BM 과정 이수</li>
+          <li>강원의료기기산업협회 미래내일인턴십 의료 AI 실험 수행</li>
+          <li>뇌혈관 영상 인페인팅 연구: PEN-Net, LaMa, MAT 기반 복원</li>
+        </ul>
       </div>
       <div class="member">
-        <div class="av">최</div>
-        <div class="role">최예원</div>
-        <div class="meta">연세대 디지털헬스케어학부</div>
-        <div class="desc">Policy & Ops<br>서비스 정책·운영</div>
+        <div class="meta">연세대학교 미래캠퍼스 디지털헬스케어학부</div>
+        <div class="member-head">
+          <div class="av">최</div>
+          <div>
+            <div class="role">최예원</div>
+            <div class="desc">Policy & Ops<br>서비스 정책·운영</div>
+          </div>
+        </div>
+        <ul class="highlights">
+          <li>한국인공지능융합기술학회 추계학술대회 논문 투고 1저자</li>
+          <li>AI 기반 의료기기 인허가 의사결정 지원 시스템 설계</li>
+          <li>해커톤 및 SW 프로젝트 기반 협업·문제 해결 경험</li>
+          <li>2026 한국인공지능융합기술학회 교육 수료</li>
+          <li>AI·데이터 기반 서비스 기획 및 프로토타입 개발 경험</li>
+          <li>HTML 기반 사용자 중심 UI/UX 설계 및 웹 서비스 구현</li>
+        </ul>
       </div>
     </div>
   </div>
