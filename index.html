@@ -78,6 +78,55 @@
       border-top: 2px solid var(--ink);
       padding-top: 20px;
     }
+    .collapsed-group {
+      margin-top: 28px;
+      border-top: 2px solid var(--ink);
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, 0.62);
+    }
+    .collapsed-group > summary {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 14px;
+      align-items: center;
+      min-height: 74px;
+      padding: 16px 18px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    .collapsed-group > summary::-webkit-details-marker { display: none; }
+    .collapsed-summary-copy {
+      display: grid;
+      gap: 5px;
+      min-width: 0;
+    }
+    .collapsed-summary-title {
+      font-size: 18px;
+      font-weight: 900;
+    }
+    .collapsed-summary-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+    .collapsed-group > summary::after {
+      content: "펼치기  ↓";
+      color: var(--violet-strong);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+    .collapsed-group[open] > summary::after { content: "접기  ↑"; }
+    .collapsed-group[open] > summary {
+      background: rgba(109, 74, 255, 0.05);
+    }
+    .collapsed-group > section {
+      margin: 0;
+      border-top: 1px solid var(--line);
+      padding: 18px;
+    }
+    .collapsed-group > section .section-head { display: none; }
     .section-head {
       display: grid;
       gap: 6px;
@@ -159,6 +208,9 @@
       header { padding: 18px; }
       .link-card { grid-template-columns: 1fr; }
       .open { width: fit-content; }
+      .collapsed-group > summary { padding: 14px; }
+      .collapsed-summary-note { max-width: 26ch; }
+      .collapsed-group > section { padding: 14px; }
     }
   </style>
 </head>
@@ -225,7 +277,25 @@
           a.querySelector(".note").textContent = item.note || item.href;
           links.appendChild(a);
         }
-        content.appendChild(section);
+        if (group.collapsed) {
+          const details = document.createElement("details");
+          const summary = document.createElement("summary");
+          const copy = document.createElement("span");
+          const title = document.createElement("span");
+          const note = document.createElement("span");
+          details.className = "collapsed-group";
+          copy.className = "collapsed-summary-copy";
+          title.className = "collapsed-summary-title";
+          note.className = "collapsed-summary-note";
+          title.textContent = group.title || "기타 링크";
+          note.textContent = `${group.description || "필요할 때 펼쳐보세요."} · ${(group.items || []).length}개`;
+          copy.append(title, note);
+          summary.append(copy);
+          details.append(summary, section);
+          content.appendChild(details);
+        } else {
+          content.appendChild(section);
+        }
       }
     }
 
