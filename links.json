@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-04T17:25:00+09:00",
+  "generatedAt": "2026-07-10T13:02:41+09:00",
   "tunnelBase": "https://psykey.ai.kr/agent-live",
-  "adapterVersion": "20260704-ralfi-prod-dev-links",
+  "adapterVersion": "20260710-ralfi-video-dev-links",
   "groups": [
     {
       "title": "바로 확인",
@@ -13,7 +13,26 @@
           "href": "https://psykey.ai.kr/agent-live/maeum-atrium.html?modelProvider=gemini-live",
           "status": "live",
           "note": "운영 고정 링크 · 최신 검증본 · 수정용 터널과 분리"
-        },
+        }
+      ]
+    },
+    {
+      "title": "작업중",
+      "items": [
+        {
+          "id": "maeum-atrium-dev",
+          "title": "랄피 3D 아트리움 수정용",
+          "href": "https://psykey.ai.kr/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1",
+          "status": "work",
+          "note": "즉시 화상상담 로비 수정본 · 운영본과 완전히 분리된 검증 경로"
+        }
+      ]
+    },
+    {
+      "title": "기타 랄피 링크",
+      "description": "기존 랄피 도구는 필요할 때만 펼쳐서 확인할 수 있습니다.",
+      "collapsed": true,
+      "items": [
         {
           "id": "ralph-live",
           "title": "랄피 Live",
@@ -34,18 +53,6 @@
           "title": "순정 Live",
           "href": "https://psykey.ai.kr/agent-live/carebridge-platform.html?modelProvider=gemini-live&surface=plain-live",
           "note": "프롬프트 없는 생 Live · 보존용"
-        }
-      ]
-    },
-    {
-      "title": "작업중",
-      "items": [
-        {
-          "id": "maeum-atrium-dev",
-          "title": "랄피 3D 아트리움 수정용",
-          "href": "https://minutes-usb-learners-petersburg.trycloudflare.com/maeum-atrium.html?modelProvider=gemini-live&dev=1",
-          "status": "work",
-          "note": "수정/검증용 Cloudflare 터널 · 운영 아님 · 끊길 수 있음"
         }
       ]
     }
