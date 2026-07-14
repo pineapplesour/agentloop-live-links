@@ -11,6 +11,7 @@ SESSION_NAME="ralfi-ios-${IOS_MAJOR}-${GITHUB_RUN_ID:-local}"
 UDID=""
 APPIUM_PID=""
 BROWSER_SESSION_OPENED=false
+TEST_SESSION_ID=""
 
 mkdir -p "$ARTIFACT_DIR"
 
@@ -54,6 +55,71 @@ ab_fast() {
     agent-browser --session "$SESSION_NAME" -p ios --device "$UDID" "$@"
 }
 
+wd_request() {
+  local method="$1"
+  local path="$2"
+  local data="${3:-}"
+  local args=(
+    --fail-with-body --silent --show-error --max-time 90
+    --request "$method"
+    --header 'Content-Type: application/json'
+  )
+  if [[ -n "$data" ]]; then
+    args+=(--data-binary "$data")
+  fi
+  curl "${args[@]}" "http://127.0.0.1:4723${path}"
+}
+
+wd_eval() {
+  local script="$1"
+  local payload
+  payload="$(jq -cn --arg script "$script" '{script:$script,args:[]}')"
+  wd_request POST "/session/$TEST_SESSION_ID/execute/sync" "$payload"
+}
+
+wd_wait() {
+  local label="$1"
+  local script="$2"
+  local timeout_seconds="${3:-90}"
+  local deadline=$((SECONDS + timeout_seconds))
+  local response=""
+  while (( SECONDS < deadline )); do
+    response="$(wd_eval "$script" 2>/dev/null || true)"
+    if jq -e '.value == true' >/dev/null 2>&1 <<<"$response"; then
+      return 0
+    fi
+    sleep 2
+  done
+  printf '%s\n' "$response" >"$ARTIFACT_DIR/wait-${label}-last-response.json"
+  echo "Timed out waiting for ${label}" >&2
+  return 1
+}
+
+wd_click() {
+  local selector="$1"
+  local response element_id
+  response="$(wd_request POST "/session/$TEST_SESSION_ID/element" \
+    "$(jq -cn --arg value "$selector" '{using:"css selector",value:$value}')")"
+  element_id="$(jq -r '.value["element-6066-11e4-a52e-4f735466cecf"] // .value.ELEMENT // empty' <<<"$response")"
+  if [[ -z "$element_id" ]]; then
+    echo "Could not find WebDriver element: $selector" >&2
+    printf '%s\n' "$response" >&2
+    return 1
+  fi
+  wd_request POST "/session/$TEST_SESSION_ID/element/$element_id/click" '{}' >/dev/null
+}
+
+wd_capture() {
+  local label="$1"
+  xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/${label}-simulator.png" >/dev/null 2>&1 || true
+  wd_request GET "/session/$TEST_SESSION_ID/screenshot" \
+    | jq -r '.value // empty' \
+    | openssl base64 -d -A \
+    >"$ARTIFACT_DIR/${label}-safari.png" 2>/dev/null || true
+  wd_request GET "/session/$TEST_SESSION_ID/source" \
+    >"$ARTIFACT_DIR/${label}-source.json" 2>/dev/null || true
+}
+
 capture_state() {
   local label="${1:-state}"
   if [[ -n "$UDID" ]]; then
@@ -70,10 +136,17 @@ capture_state() {
 cleanup() {
   local exit_code=$?
   if [[ $exit_code -ne 0 ]]; then
-    capture_state "failure"
+    if [[ -n "$TEST_SESSION_ID" ]]; then
+      wd_capture "failure"
+    else
+      capture_state "failure"
+    fi
   fi
   if [[ -n "$UDID" && "$BROWSER_SESSION_OPENED" == true ]]; then
     ab_fast close >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$TEST_SESSION_ID" ]]; then
+    wd_request DELETE "/session/$TEST_SESSION_ID" >/dev/null 2>&1 || true
   fi
   if [[ -n "$APPIUM_PID" ]]; then
     kill "$APPIUM_PID" >/dev/null 2>&1 || true
@@ -257,32 +330,47 @@ sleep 5
 echo "Opening the public Ralfi build in Mobile Safari"
 ab open "$RALFI_URL"
 BROWSER_SESSION_OPENED=true
-ab wait --load domcontentloaded
-ab wait '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
-capture_state "01-login"
+xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/agent-browser-open-simulator.png" >/dev/null 2>&1 || true
+ab_fast close >/dev/null 2>&1 || true
+BROWSER_SESSION_OPENED=false
+
+# agent-browser 0.31.2 currently creates a fresh Appium session for each iOS
+# CLI command, so chained wait/click commands cannot reliably share one web
+# context. Keep the actual user path in one standards-based WebDriver session
+# on the exact Safari instance that agent-browser opened above.
+xcrun simctl openurl "$UDID" "$RALFI_URL"
+sleep 3
+echo "Creating the persistent Mobile Safari user-path session"
+wd_request POST /session "$(<"$ARTIFACT_DIR/prewarm-request.json")" \
+  >"$ARTIFACT_DIR/test-session-response.json"
+TEST_SESSION_ID="$(jq -r '.value.sessionId // .sessionId // empty' "$ARTIFACT_DIR/test-session-response.json")"
+if [[ -z "$TEST_SESSION_ID" ]]; then
+  echo "The persistent Safari session returned no session id" >&2
+  cat "$ARTIFACT_DIR/test-session-response.json" >&2
+  exit 1
+fi
+
+wd_wait login-gate 'return document.readyState !== "loading" && !!document.querySelector("#care-role-gate .role-card") && !!document.querySelector("[data-action=\"DEV_QUICK_LOGIN\"][data-account=\"client1\"]");' 120
+wd_capture "01-login"
 
 echo "Using the predefined Kim Minji client account"
-ab click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
-ab wait '#btn-enter'
-capture_state "02-quick-login"
+wd_click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
+wd_wait quick-login 'return !document.querySelector("#care-role-gate") && !!document.querySelector("#btn-enter");' 120
+wd_capture "02-quick-login"
 
 echo "Entering the atrium through the visible user path"
-ab click '#btn-enter'
-ab wait '#skip'
-ab click '#skip'
-ab wait '.zone-card[data-zone-key="match"]'
-ab wait --fn "window.__maeumAtriumLoaderMode === 'ios-webgl-iife'"
-ab wait --fn "window.__maeumAtriumVisualMode === 'webgl'"
-ab wait --fn "window.__maeumRenderStats && window.__maeumRenderStats.frames > 0"
-capture_state "03-atrium-hub"
+wd_click '#btn-enter'
+wd_wait arrival-skip 'return !!document.querySelector("#skip") && getComputedStyle(document.querySelector("#skip")).display !== "none";' 60
+wd_click '#skip'
+wd_wait atrium-hub 'return !!document.querySelector(".zone-card[data-zone-key=\"match\"]") && window.__maeumAtriumLoaderMode === "ios-webgl-iife" && window.__maeumAtriumVisualMode === "webgl" && !!window.__maeumRenderStats && window.__maeumRenderStats.frames > 0;' 120
+wd_capture "03-atrium-hub"
 
 echo "Opening Counseling Confirmation from the actual atrium card"
-ab click '.zone-card[data-zone-key="match"]'
-ab wait '#panel.show'
-ab wait --text '상담 확인'
-capture_state "04-counseling-confirmation"
+wd_click '.zone-card[data-zone-key="match"]'
+wd_wait counseling-confirmation 'return !!document.querySelector("#panel.show") && !!document.querySelector("#panel-card") && document.querySelector("#panel-card").textContent.includes("상담 확인");' 120
+wd_capture "04-counseling-confirmation"
 
-ab eval '(() => {
+wd_eval 'return (() => {
   const canvas = document.querySelector("#webgl canvas");
   let centerPixel = null;
   let webglVersion = null;
@@ -301,7 +389,7 @@ ab eval '(() => {
   }
   const panel = document.querySelector("#panel");
   const card = document.querySelector("#panel-card");
-  return JSON.stringify({
+  return {
     url: location.href,
     userAgent: navigator.userAgent,
     platform: navigator.platform,
@@ -322,15 +410,10 @@ ab eval '(() => {
     panelTextIncludesCounselingConfirmation: !!(card && card.textContent.includes("상담 확인")),
     panelBackdropFilter: card ? getComputedStyle(card).backdropFilter : null,
     bodyClasses: document.body.className
-  });
-})()' >"$ARTIFACT_DIR/diagnostics.json.txt"
+  };
+})()' >"$ARTIFACT_DIR/diagnostics.json"
 
-ab wait --fn "document.documentElement.scrollWidth <= window.innerWidth + 1"
-ab wait --fn "document.querySelector('#panel.show') !== null"
-ab wait --fn "document.querySelector('#panel-card') && document.querySelector('#panel-card').textContent.includes('상담 확인')"
-ab wait --fn "window.__maeumAtriumVisualMode === 'webgl' && window.__maeumForceStaticAtrium !== true"
-ab wait --fn "!window.__maeumAtriumWebGLError"
-ab wait --fn "(() => { const c=document.querySelector('#webgl canvas'); if(!c)return false; const g=c.getContext('webgl2')||c.getContext('webgl'); if(!g)return false; const p=new Uint8Array(4); g.readPixels(Math.floor(g.drawingBufferWidth/2),Math.floor(g.drawingBufferHeight/2),1,1,g.RGBA,g.UNSIGNED_BYTE,p); return p[3] > 0 && (p[0]+p[1]+p[2]) > 0; })()"
+wd_wait final-contract 'return document.documentElement.scrollWidth <= window.innerWidth + 1 && !!document.querySelector("#panel.show") && !!document.querySelector("#panel-card") && document.querySelector("#panel-card").textContent.includes("상담 확인") && window.__maeumAtriumVisualMode === "webgl" && window.__maeumForceStaticAtrium !== true && !window.__maeumAtriumWebGLError && (() => { const c=document.querySelector("#webgl canvas"); if(!c)return false; const g=c.getContext("webgl2")||c.getContext("webgl"); if(!g)return false; const p=new Uint8Array(4); g.readPixels(Math.floor(g.drawingBufferWidth/2),Math.floor(g.drawingBufferHeight/2),1,1,g.RGBA,g.UNSIGNED_BYTE,p); return p[3] > 0 && (p[0]+p[1]+p[2]) > 0; })();' 90
 
 cat >"$ARTIFACT_DIR/result.json" <<EOF
 {
