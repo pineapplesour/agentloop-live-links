@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-10T13:02:41+09:00",
+  "generatedAt": "2026-07-14T10:33:22+09:00",
   "tunnelBase": "https://psykey.ai.kr/agent-live",
-  "adapterVersion": "20260710-ralfi-video-dev-links",
+  "adapterVersion": "20260714-ralfi-work16-whispercpp",
   "groups": [
     {
       "title": "바로 확인",
@@ -22,9 +22,9 @@
         {
           "id": "maeum-atrium-dev",
           "title": "랄피 3D 아트리움 수정용",
-          "href": "https://psykey.ai.kr/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1",
+          "href": "https://struck-pete-cir-climbing.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1",
           "status": "work",
-          "note": "즉시 화상상담 로비 수정본 · 운영본과 완전히 분리된 검증 경로"
+          "note": "work16 Windows CUDA whisper.cpp 장시간 로컬 전사 연결본 · 새 화상상담부터 자동 적용 · 운영본과 분리"
         }
       ]
     },
