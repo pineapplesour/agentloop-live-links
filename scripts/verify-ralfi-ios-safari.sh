@@ -10,6 +10,7 @@ DEVICE_NAME="Ralfi iOS ${IOS_MAJOR} Safari"
 SESSION_NAME="ralfi-ios-${IOS_MAJOR}-${GITHUB_RUN_ID:-local}"
 UDID=""
 APPIUM_PID=""
+BROWSER_SESSION_OPENED=false
 
 mkdir -p "$ARTIFACT_DIR"
 
@@ -58,10 +59,12 @@ capture_state() {
   if [[ -n "$UDID" ]]; then
     xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/${label}-simulator.png" >/dev/null 2>&1 || true
   fi
-  ab_fast screenshot "$ARTIFACT_DIR/${label}-safari.png" >/dev/null 2>&1 || true
-  ab_fast snapshot -i >"$ARTIFACT_DIR/${label}-snapshot.txt" 2>&1 || true
-  ab_fast console --json >"$ARTIFACT_DIR/${label}-console.json" 2>&1 || true
-  ab_fast errors >"$ARTIFACT_DIR/${label}-errors.txt" 2>&1 || true
+  if [[ "$BROWSER_SESSION_OPENED" == true ]]; then
+    ab_fast screenshot "$ARTIFACT_DIR/${label}-safari.png" >/dev/null 2>&1 || true
+    ab_fast snapshot -i >"$ARTIFACT_DIR/${label}-snapshot.txt" 2>&1 || true
+    ab_fast console --json >"$ARTIFACT_DIR/${label}-console.json" 2>&1 || true
+    ab_fast errors >"$ARTIFACT_DIR/${label}-errors.txt" 2>&1 || true
+  fi
 }
 
 cleanup() {
@@ -69,7 +72,7 @@ cleanup() {
   if [[ $exit_code -ne 0 ]]; then
     capture_state "failure"
   fi
-  if [[ -n "$UDID" ]]; then
+  if [[ -n "$UDID" && "$BROWSER_SESSION_OPENED" == true ]]; then
     ab_fast close >/dev/null 2>&1 || true
   fi
   if [[ -n "$APPIUM_PID" ]]; then
@@ -103,6 +106,10 @@ DEVICE_TYPE_ID="$(jq -r --arg name "$DEVICE_TYPE_NAME" '
   .devicetypes[] | select(.name == $name) | .identifier
 ' "$ARTIFACT_DIR/device-types.json" | head -n 1)"
 
+RUNTIME_VERSION="$(jq -r --arg id "$RUNTIME_ID" '
+  .runtimes[] | select(.identifier == $id) | .version
+' "$ARTIFACT_DIR/runtimes.json" | head -n 1)"
+
 if [[ -z "$RUNTIME_ID" || "$RUNTIME_ID" == "null" ]]; then
   echo "No available iOS ${IOS_MAJOR}.x runtime" >&2
   exit 1
@@ -122,11 +129,26 @@ sleep 3
 xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
 xcrun simctl list devices >"$ARTIFACT_DIR/devices.txt"
 
+echo "Prebuilding WebDriverAgent for iOS ${RUNTIME_VERSION}"
+if ! run_with_timeout 900 \
+  appium driver run xcuitest build-wda -- \
+    --sdk="$RUNTIME_VERSION" \
+    --name="$DEVICE_NAME" \
+    >"$ARTIFACT_DIR/wda-build.log" 2>&1; then
+  echo "WebDriverAgent prebuild failed" >&2
+  tail -n 160 "$ARTIFACT_DIR/wda-build.log" >&2 || true
+  exit 1
+fi
+
 # agent-browser normally launches Appium with stdout/stderr pipes. A first-time
 # WebDriverAgent build can fill those pipes and stall. Keep Appium's output
 # draining into the uploaded artifact instead, then let agent-browser connect.
 echo "Starting Appium with durable logs"
-appium --relaxed-security --port 4723 >"$ARTIFACT_DIR/appium.log" 2>&1 &
+appium \
+  --relaxed-security \
+  --port 4723 \
+  --default-capabilities '{"appium:wdaLaunchTimeout":180000,"appium:wdaStartupRetries":1,"appium:showXcodeLog":true,"appium:useNewWDA":false}' \
+  >"$ARTIFACT_DIR/appium.log" 2>&1 &
 APPIUM_PID=$!
 APPIUM_READY=false
 for _ in $(seq 1 60); do
@@ -149,8 +171,63 @@ fi
 
 curl --fail --location --silent --show-error "$RALFI_URL" -o /dev/null
 
+cat >"$ARTIFACT_DIR/prewarm-request.json" <<EOF
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "platformName": "iOS",
+      "browserName": "Safari",
+      "appium:automationName": "XCUITest",
+      "appium:deviceName": "${DEVICE_TYPE_NAME}",
+      "appium:udid": "${UDID}",
+      "appium:platformVersion": "${RUNTIME_VERSION}",
+      "appium:noReset": true,
+      "appium:useNewWDA": false,
+      "appium:wdaLaunchTimeout": 180000,
+      "appium:wdaStartupRetries": 1,
+      "appium:showXcodeLog": true
+    }
+  }
+}
+EOF
+
+echo "Prewarming the WebDriverAgent session"
+if ! curl \
+  --fail-with-body \
+  --silent \
+  --show-error \
+  --max-time 420 \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --data-binary "@$ARTIFACT_DIR/prewarm-request.json" \
+  http://127.0.0.1:4723/session \
+  >"$ARTIFACT_DIR/prewarm-response.json"; then
+  echo "WebDriverAgent prewarm failed" >&2
+  tail -n 220 "$ARTIFACT_DIR/appium.log" >&2 || true
+  exit 1
+fi
+
+PREWARM_SESSION_ID="$(jq -r '.value.sessionId // .sessionId // empty' "$ARTIFACT_DIR/prewarm-response.json")"
+if [[ -z "$PREWARM_SESSION_ID" ]]; then
+  echo "WebDriverAgent prewarm returned no session id" >&2
+  cat "$ARTIFACT_DIR/prewarm-response.json" >&2
+  exit 1
+fi
+curl \
+  --fail-with-body \
+  --silent \
+  --show-error \
+  --max-time 60 \
+  --request DELETE \
+  "http://127.0.0.1:4723/session/$PREWARM_SESSION_ID" \
+  >"$ARTIFACT_DIR/prewarm-delete-response.json"
+curl --silent --show-error --max-time 10 \
+  http://127.0.0.1:8100/status \
+  >"$ARTIFACT_DIR/wda-status-after-prewarm.json" || true
+
 echo "Opening the public Ralfi build in Mobile Safari"
 ab open "$RALFI_URL"
+BROWSER_SESSION_OPENED=true
 ab wait --load domcontentloaded
 ab wait '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
 capture_state "01-login"
