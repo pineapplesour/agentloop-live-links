@@ -186,6 +186,14 @@ fi
 
 curl --fail --location --silent --show-error "$RALFI_URL" -o /dev/null
 
+# A brand-new simulator opens Safari on its Privacy Report start page, which
+# does not expose a debuggable web application to Web Inspector. Load the real
+# target before creating the first Appium Safari session so XCUITest can attach
+# to an actual web context instead of timing out during session creation.
+xcrun simctl openurl "$UDID" "$RALFI_URL"
+sleep 8
+xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/prewarm-target.png" >/dev/null 2>&1 || true
+
 cat >"$ARTIFACT_DIR/prewarm-request.json" <<EOF
 {
   "capabilities": {
@@ -197,6 +205,7 @@ cat >"$ARTIFACT_DIR/prewarm-request.json" <<EOF
       "appium:udid": "${UDID}",
       "appium:platformVersion": "${RUNTIME_VERSION}",
       "appium:noReset": true,
+      "appium:safariInitialUrl": "${RALFI_URL}",
       "appium:useNewWDA": false,
       "appium:wdaLaunchTimeout": 180000,
       "appium:wdaStartupRetries": 1,
@@ -239,6 +248,11 @@ curl \
 curl --silent --show-error --max-time 10 \
   http://127.0.0.1:8100/status \
   >"$ARTIFACT_DIR/wda-status-after-prewarm.json" || true
+
+# Keep a live Safari web context available for agent-browser's second session.
+# agent-browser 0.31.2 does not forward custom Safari startup capabilities.
+xcrun simctl openurl "$UDID" "$RALFI_URL"
+sleep 5
 
 echo "Opening the public Ralfi build in Mobile Safari"
 ab open "$RALFI_URL"
