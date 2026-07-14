@@ -370,11 +370,42 @@ fi
 
 wd_wait login-gate 'return document.readyState !== "loading" && !!document.querySelector("#care-role-gate .role-card") && !!document.querySelector("[data-action=\"DEV_QUICK_LOGIN\"][data-account=\"client1\"]");' 120
 wd_capture "01-login"
+wd_eval 'return (() => {
+  const gate = document.querySelector("#care-role-gate");
+  const card = gate && gate.querySelector(".role-card");
+  const gateStyle = gate ? getComputedStyle(gate) : null;
+  const cardStyle = card ? getComputedStyle(card) : null;
+  const rect = card ? card.getBoundingClientRect() : null;
+  const styleSheets = Array.from(document.styleSheets).map((sheet) => {
+    let ruleCount = null;
+    let ruleError = null;
+    try { ruleCount = sheet.cssRules.length; } catch (error) { ruleError = String(error); }
+    return { href: sheet.href, disabled: sheet.disabled, ruleCount, ruleError };
+  });
+  return {
+    styleSheets,
+    resourceStyles: performance.getEntriesByType("resource")
+      .filter((entry) => entry.name.includes(".css"))
+      .map((entry) => ({ name: entry.name, duration: entry.duration, transferSize: entry.transferSize })),
+    gate: gateStyle ? { display: gateStyle.display, position: gateStyle.position, background: gateStyle.backgroundColor } : null,
+    card: cardStyle && rect ? {
+      display: cardStyle.display,
+      color: cardStyle.color,
+      background: cardStyle.backgroundColor,
+      width: rect.width,
+      height: rect.height,
+      left: rect.left,
+      right: rect.right
+    } : null
+  };
+})()' >"$ARTIFACT_DIR/01-login-diagnostics.json"
+wd_wait styled-login 'return (() => { const g=document.querySelector("#care-role-gate"); const c=g&&g.querySelector(".role-card"); if(!g||!c)return false; const gs=getComputedStyle(g); const cs=getComputedStyle(c); const r=c.getBoundingClientRect(); const sheets=Array.from(document.styleSheets).filter(s=>s.href&&s.href.includes("/assets/skins/")); return gs.position==="fixed" && gs.display!=="none" && cs.display!=="none" && cs.backgroundColor!=="rgba(0, 0, 0, 0)" && r.width>=300 && r.height>=300 && r.left>=0 && r.right<=innerWidth+1 && sheets.length>=2 && sheets.every(s=>{try{return s.cssRules.length>0}catch(_){return false}}); })();' 30
 
 echo "Using the predefined Kim Minji client account"
 wd_click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
 wd_wait quick-login 'return !document.querySelector("#care-role-gate") && !!document.querySelector("#btn-enter");' 120
 wd_capture "02-quick-login"
+wd_wait entry-layout 'return (() => { const entry=document.querySelector("#entry"); const sub=document.querySelector(".entry-sub"); const button=document.querySelector("#btn-enter"); if(!entry||!sub||!button)return false; const es=getComputedStyle(entry); const r=sub.getBoundingClientRect(); const b=button.getBoundingClientRect(); return es.position==="fixed" && es.display!=="none" && r.left>=12 && r.right<=innerWidth-12 && b.left>=12 && b.right<=innerWidth-12; })();' 30
 
 echo "Entering the atrium through the visible user path"
 wd_click '#btn-enter'
