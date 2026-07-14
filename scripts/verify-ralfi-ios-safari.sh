@@ -55,6 +55,24 @@ ab_fast() {
     agent-browser --session "$SESSION_NAME" -p ios --device "$UDID" "$@"
 }
 
+open_safari_url() {
+  local attempt
+  for attempt in 1 2 3 4; do
+    echo "Opening the target URL in Safari (attempt ${attempt}/4)"
+    if run_with_timeout 45 xcrun simctl openurl "$UDID" "$RALFI_URL"; then
+      return 0
+    fi
+    # A newly created iOS 18 simulator can report NSPOSIXErrorDomain 60 while
+    # MobileSafari is still finishing its first-launch setup. Recheck the boot
+    # barrier, reset only Safari, and retry instead of failing the product run.
+    xcrun simctl bootstatus "$UDID" -b || true
+    xcrun simctl terminate "$UDID" com.apple.mobilesafari >/dev/null 2>&1 || true
+    sleep 5
+  done
+  echo "Safari could not open the target URL after four attempts" >&2
+  return 1
+}
+
 wd_request() {
   local method="$1"
   local path="$2"
@@ -263,7 +281,7 @@ curl --fail --location --silent --show-error "$RALFI_URL" -o /dev/null
 # does not expose a debuggable web application to Web Inspector. Load the real
 # target before creating the first Appium Safari session so XCUITest can attach
 # to an actual web context instead of timing out during session creation.
-xcrun simctl openurl "$UDID" "$RALFI_URL"
+open_safari_url
 sleep 8
 xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/prewarm-target.png" >/dev/null 2>&1 || true
 
@@ -324,7 +342,7 @@ curl --silent --show-error --max-time 10 \
 
 # Keep a live Safari web context available for agent-browser's second session.
 # agent-browser 0.31.2 does not forward custom Safari startup capabilities.
-xcrun simctl openurl "$UDID" "$RALFI_URL"
+open_safari_url
 sleep 5
 
 echo "Opening the public Ralfi build in Mobile Safari"
@@ -338,7 +356,7 @@ BROWSER_SESSION_OPENED=false
 # CLI command, so chained wait/click commands cannot reliably share one web
 # context. Keep the actual user path in one standards-based WebDriver session
 # on the exact Safari instance that agent-browser opened above.
-xcrun simctl openurl "$UDID" "$RALFI_URL"
+open_safari_url
 sleep 3
 echo "Creating the persistent Mobile Safari user-path session"
 wd_request POST /session "$(<"$ARTIFACT_DIR/prewarm-request.json")" \
