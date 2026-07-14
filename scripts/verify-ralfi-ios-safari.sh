@@ -13,17 +13,41 @@ APPIUM_PID=""
 
 mkdir -p "$ARTIFACT_DIR"
 
+run_with_timeout() {
+  local seconds="$1"
+  shift
+  python3 - "$seconds" "$@" <<'PY'
+import os
+import signal
+import subprocess
+import sys
+
+timeout = float(sys.argv[1])
+command = sys.argv[2:]
+process = subprocess.Popen(command, start_new_session=True)
+try:
+    sys.exit(process.wait(timeout=timeout))
+except subprocess.TimeoutExpired:
+    print(f"Timed out after {timeout:.0f}s: {' '.join(command)}", file=sys.stderr)
+    os.killpg(process.pid, signal.SIGTERM)
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        os.killpg(process.pid, signal.SIGKILL)
+        process.wait()
+    sys.exit(124)
+PY
+}
+
 ab() {
-  perl -e '$seconds = shift; alarm $seconds; exec @ARGV' \
-    360 env \
+  run_with_timeout 360 env \
     AGENT_BROWSER_PROVIDER=ios \
     AGENT_BROWSER_IOS_UDID="$UDID" \
     agent-browser --session "$SESSION_NAME" "$@"
 }
 
 ab_fast() {
-  perl -e '$seconds = shift; alarm $seconds; exec @ARGV' \
-    20 env \
+  run_with_timeout 20 env \
     AGENT_BROWSER_PROVIDER=ios \
     AGENT_BROWSER_IOS_UDID="$UDID" \
     agent-browser --session "$SESSION_NAME" "$@"
@@ -47,12 +71,14 @@ cleanup() {
   fi
   if [[ -n "$UDID" ]]; then
     ab_fast close >/dev/null 2>&1 || true
-    xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
-    xcrun simctl delete "$UDID" >/dev/null 2>&1 || true
   fi
   if [[ -n "$APPIUM_PID" ]]; then
     kill "$APPIUM_PID" >/dev/null 2>&1 || true
     wait "$APPIUM_PID" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$UDID" ]]; then
+    xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
+    xcrun simctl delete "$UDID" >/dev/null 2>&1 || true
   fi
   exit "$exit_code"
 }
@@ -90,10 +116,11 @@ UDID="$(xcrun simctl create "$DEVICE_NAME" "$DEVICE_TYPE_ID" "$RUNTIME_ID")"
 echo "Created $DEVICE_NAME at $UDID using $RUNTIME_ID"
 xcrun simctl boot "$UDID"
 xcrun simctl bootstatus "$UDID" -b
+open -Fn "$(xcode-select -p)/Applications/Simulator.app" \
+  --args -CurrentDeviceUDID "$UDID" || true
+sleep 3
 xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
 xcrun simctl list devices >"$ARTIFACT_DIR/devices.txt"
-perl -e '$seconds = shift; alarm $seconds; exec @ARGV' \
-  30 agent-browser device list >"$ARTIFACT_DIR/agent-browser-devices.txt" 2>&1 || true
 
 # agent-browser normally launches Appium with stdout/stderr pipes. A first-time
 # WebDriverAgent build can fill those pipes and stall. Keep Appium's output
