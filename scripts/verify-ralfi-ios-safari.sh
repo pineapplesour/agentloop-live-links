@@ -44,14 +44,14 @@ ab() {
   run_with_timeout 360 env \
     AGENT_BROWSER_PROVIDER=ios \
     AGENT_BROWSER_IOS_UDID="$UDID" \
-    agent-browser --session "$SESSION_NAME" "$@"
+    agent-browser --session "$SESSION_NAME" -p ios --device "$UDID" "$@"
 }
 
 ab_fast() {
   run_with_timeout 20 env \
     AGENT_BROWSER_PROVIDER=ios \
     AGENT_BROWSER_IOS_UDID="$UDID" \
-    agent-browser --session "$SESSION_NAME" "$@"
+    agent-browser --session "$SESSION_NAME" -p ios --device "$UDID" "$@"
 }
 
 capture_state() {
@@ -118,6 +118,21 @@ if [[ -z "$DEVICE_TYPE_ID" || "$DEVICE_TYPE_ID" == "null" ]]; then
   echo "No simulator device type named ${DEVICE_TYPE_NAME}" >&2
   exit 1
 fi
+
+# agent-browser 0.31.2 parses --device but does not copy it into the iOS launch
+# request. Make the requested simulator the only iPhone Pro candidate so its
+# current default selector cannot silently choose a preinstalled stale UDID.
+xcrun simctl list devices -j >"$ARTIFACT_DIR/initial-devices.json"
+while IFS= read -r existing_udid; do
+  if [[ -n "$existing_udid" ]]; then
+    xcrun simctl delete "$existing_udid" >/dev/null 2>&1 || true
+  fi
+done < <(jq -r '
+  .devices[][]
+  | select(.name | startswith("iPhone"))
+  | select(.name | contains("Pro"))
+  | .udid
+' "$ARTIFACT_DIR/initial-devices.json")
 
 UDID="$(xcrun simctl create "$DEVICE_NAME" "$DEVICE_TYPE_ID" "$RUNTIME_ID")"
 echo "Created $DEVICE_NAME at $UDID using $RUNTIME_ID"
