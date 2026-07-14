@@ -9,11 +9,24 @@ ARTIFACT_DIR="${ARTIFACT_DIR:-artifacts/ios-${IOS_MAJOR}}"
 DEVICE_NAME="Ralfi iOS ${IOS_MAJOR} Safari"
 SESSION_NAME="ralfi-ios-${IOS_MAJOR}-${GITHUB_RUN_ID:-local}"
 UDID=""
+APPIUM_PID=""
 
 mkdir -p "$ARTIFACT_DIR"
 
 ab() {
-  agent-browser --session "$SESSION_NAME" -p ios --device "$UDID" "$@"
+  perl -e '$seconds = shift; alarm $seconds; exec @ARGV' \
+    360 env \
+    AGENT_BROWSER_PROVIDER=ios \
+    AGENT_BROWSER_IOS_UDID="$UDID" \
+    agent-browser --session "$SESSION_NAME" "$@"
+}
+
+ab_fast() {
+  perl -e '$seconds = shift; alarm $seconds; exec @ARGV' \
+    20 env \
+    AGENT_BROWSER_PROVIDER=ios \
+    AGENT_BROWSER_IOS_UDID="$UDID" \
+    agent-browser --session "$SESSION_NAME" "$@"
 }
 
 capture_state() {
@@ -21,10 +34,10 @@ capture_state() {
   if [[ -n "$UDID" ]]; then
     xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/${label}-simulator.png" >/dev/null 2>&1 || true
   fi
-  ab screenshot "$ARTIFACT_DIR/${label}-safari.png" >/dev/null 2>&1 || true
-  ab snapshot -i >"$ARTIFACT_DIR/${label}-snapshot.txt" 2>&1 || true
-  ab console --json >"$ARTIFACT_DIR/${label}-console.json" 2>&1 || true
-  ab errors >"$ARTIFACT_DIR/${label}-errors.txt" 2>&1 || true
+  ab_fast screenshot "$ARTIFACT_DIR/${label}-safari.png" >/dev/null 2>&1 || true
+  ab_fast snapshot -i >"$ARTIFACT_DIR/${label}-snapshot.txt" 2>&1 || true
+  ab_fast console --json >"$ARTIFACT_DIR/${label}-console.json" 2>&1 || true
+  ab_fast errors >"$ARTIFACT_DIR/${label}-errors.txt" 2>&1 || true
 }
 
 cleanup() {
@@ -33,9 +46,13 @@ cleanup() {
     capture_state "failure"
   fi
   if [[ -n "$UDID" ]]; then
-    ab close >/dev/null 2>&1 || true
+    ab_fast close >/dev/null 2>&1 || true
     xcrun simctl shutdown "$UDID" >/dev/null 2>&1 || true
     xcrun simctl delete "$UDID" >/dev/null 2>&1 || true
+  fi
+  if [[ -n "$APPIUM_PID" ]]; then
+    kill "$APPIUM_PID" >/dev/null 2>&1 || true
+    wait "$APPIUM_PID" >/dev/null 2>&1 || true
   fi
   exit "$exit_code"
 }
@@ -75,7 +92,33 @@ xcrun simctl boot "$UDID"
 xcrun simctl bootstatus "$UDID" -b
 xcrun simctl status_bar "$UDID" override --time 9:41 --batteryLevel 100 --wifiBars 3 --cellularBars 4 || true
 xcrun simctl list devices >"$ARTIFACT_DIR/devices.txt"
-agent-browser device list >"$ARTIFACT_DIR/agent-browser-devices.txt" 2>&1 || true
+perl -e '$seconds = shift; alarm $seconds; exec @ARGV' \
+  30 agent-browser device list >"$ARTIFACT_DIR/agent-browser-devices.txt" 2>&1 || true
+
+# agent-browser normally launches Appium with stdout/stderr pipes. A first-time
+# WebDriverAgent build can fill those pipes and stall. Keep Appium's output
+# draining into the uploaded artifact instead, then let agent-browser connect.
+echo "Starting Appium with durable logs"
+appium --relaxed-security --port 4723 >"$ARTIFACT_DIR/appium.log" 2>&1 &
+APPIUM_PID=$!
+APPIUM_READY=false
+for _ in $(seq 1 60); do
+  if curl --fail --silent http://127.0.0.1:4723/status >/dev/null; then
+    APPIUM_READY=true
+    break
+  fi
+  if ! kill -0 "$APPIUM_PID" >/dev/null 2>&1; then
+    echo "Appium exited before becoming ready" >&2
+    tail -n 120 "$ARTIFACT_DIR/appium.log" >&2 || true
+    exit 1
+  fi
+  sleep 1
+done
+if [[ "$APPIUM_READY" != true ]]; then
+  echo "Appium did not become ready within 60 seconds" >&2
+  tail -n 120 "$ARTIFACT_DIR/appium.log" >&2 || true
+  exit 1
+fi
 
 curl --fail --location --silent --show-error "$RALFI_URL" -o /dev/null
 
