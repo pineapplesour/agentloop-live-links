@@ -1,0 +1,67 @@
+name: Ralfi iOS Safari user path
+
+on:
+  workflow_dispatch:
+    inputs:
+      ralfi_url:
+        description: Public Ralfi build to verify
+        required: true
+        default: https://struck-pete-cir-climbing.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=24
+
+permissions:
+  contents: read
+
+jobs:
+  mobile-safari:
+    name: iOS ${{ matrix.ios_major }} · ${{ matrix.device }}
+    runs-on: macos-15
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - ios_major: "18"
+            device: iPhone 16 Pro
+            xcode: /Applications/Xcode_16.4.app
+          - ios_major: "26"
+            device: iPhone 17 Pro
+            xcode: /Applications/Xcode_26.2.app
+
+    steps:
+      - name: Check out the verification harness
+        uses: actions/checkout@v4
+
+      - name: Use matching Xcode and Node 24
+        run: |
+          sudo xcode-select --switch "${{ matrix.xcode }}/Contents/Developer"
+          xcodebuild -version
+          xcrun simctl list runtimes
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Install agent-browser and Appium iOS driver
+        run: |
+          npm install --global agent-browser@latest appium@latest
+          appium driver install xcuitest
+          agent-browser --version
+          appium --version
+
+      - name: Run the real Mobile Safari user path
+        env:
+          RALFI_URL: ${{ inputs.ralfi_url }}
+          IOS_MAJOR: ${{ matrix.ios_major }}
+          DEVICE_TYPE_NAME: ${{ matrix.device }}
+          ARTIFACT_DIR: artifacts/ios-${{ matrix.ios_major }}
+          AGENT_BROWSER_DEFAULT_TIMEOUT: "30000"
+        run: bash scripts/verify-ralfi-ios-safari.sh
+
+      - name: Publish screenshots, snapshots, and diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ralfi-ios-${{ matrix.ios_major }}-safari-${{ github.run_id }}
+          path: artifacts/ios-${{ matrix.ios_major }}/
+          if-no-files-found: warn
+          retention-days: 14
