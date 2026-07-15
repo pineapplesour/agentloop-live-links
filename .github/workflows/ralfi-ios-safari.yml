@@ -6,7 +6,7 @@ on:
       ralfi_url:
         description: Public Ralfi build to verify
         required: true
-        default: https://struck-pete-cir-climbing.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=24
+        default: https://struck-pete-cir-climbing.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=58
 
 permissions:
   contents: read

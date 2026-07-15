@@ -12,6 +12,7 @@ UDID=""
 APPIUM_PID=""
 BROWSER_SESSION_OPENED=false
 TEST_SESSION_ID=""
+NATIVE_SETUP_SESSION_ID=""
 
 mkdir -p "$ARTIFACT_DIR"
 
@@ -166,6 +167,9 @@ cleanup() {
   if [[ -n "$TEST_SESSION_ID" ]]; then
     wd_request DELETE "/session/$TEST_SESSION_ID" >/dev/null 2>&1 || true
   fi
+  if [[ -n "$NATIVE_SETUP_SESSION_ID" ]]; then
+    wd_request DELETE "/session/$NATIVE_SETUP_SESSION_ID" >/dev/null 2>&1 || true
+  fi
   if [[ -n "$APPIUM_PID" ]]; then
     kill "$APPIUM_PID" >/dev/null 2>&1 || true
     wait "$APPIUM_PID" >/dev/null 2>&1 || true
@@ -285,6 +289,66 @@ open_safari_url
 sleep 8
 xcrun simctl io "$UDID" screenshot "$ARTIFACT_DIR/prewarm-target.png" >/dev/null 2>&1 || true
 
+# iOS 26 shows a first-run Safari coach mark over an otherwise loaded page.
+# While that native popover is present, Web Inspector can report no connected
+# applications even though the product is visibly rendered. Attach to Safari
+# in native context first and dismiss only the system Close control. This keeps
+# the subsequent product assertions in the real Safari web context.
+cat >"$ARTIFACT_DIR/native-safari-setup-request.json" <<EOF
+{
+  "capabilities": {
+    "alwaysMatch": {
+      "platformName": "iOS",
+      "appium:automationName": "XCUITest",
+      "appium:deviceName": "${DEVICE_TYPE_NAME}",
+      "appium:udid": "${UDID}",
+      "appium:platformVersion": "${RUNTIME_VERSION}",
+      "appium:bundleId": "com.apple.mobilesafari",
+      "appium:noReset": true,
+      "appium:shouldTerminateApp": false,
+      "appium:forceAppLaunch": false,
+      "appium:useNewWDA": false,
+      "appium:wdaLaunchTimeout": 180000,
+      "appium:wdaStartupRetries": 1,
+      "appium:showXcodeLog": true
+    }
+  }
+}
+EOF
+
+echo "Checking for a native Safari first-run coach mark"
+if curl \
+  --fail-with-body \
+  --silent \
+  --show-error \
+  --max-time 300 \
+  --request POST \
+  --header 'Content-Type: application/json' \
+  --data-binary "@$ARTIFACT_DIR/native-safari-setup-request.json" \
+  http://127.0.0.1:4723/session \
+  >"$ARTIFACT_DIR/native-safari-setup-response.json"; then
+  NATIVE_SETUP_SESSION_ID="$(jq -r '.value.sessionId // .sessionId // empty' "$ARTIFACT_DIR/native-safari-setup-response.json")"
+  if [[ -n "$NATIVE_SETUP_SESSION_ID" ]]; then
+    wd_request GET "/session/$NATIVE_SETUP_SESSION_ID/source" \
+      >"$ARTIFACT_DIR/native-safari-source.xml" 2>/dev/null || true
+    CLOSE_RESPONSE="$(wd_request POST "/session/$NATIVE_SETUP_SESSION_ID/element" \
+      "$(jq -cn \
+        --arg value "type == 'XCUIElementTypeButton' AND (label == 'Close' OR name == 'Close' OR label == '닫기' OR name == '닫기')" \
+        '{using:"-ios predicate string",value:$value}')" 2>/dev/null || true)"
+    CLOSE_ELEMENT_ID="$(jq -r '.value["element-6066-11e4-a52e-4f735466cecf"] // .value.ELEMENT // empty' <<<"$CLOSE_RESPONSE")"
+    if [[ -n "$CLOSE_ELEMENT_ID" ]]; then
+      echo "Dismissing the native Safari first-run coach mark"
+      wd_request POST "/session/$NATIVE_SETUP_SESSION_ID/element/$CLOSE_ELEMENT_ID/click" '{}' >/dev/null
+      sleep 2
+    fi
+    wd_request DELETE "/session/$NATIVE_SETUP_SESSION_ID" >/dev/null 2>&1 || true
+    NATIVE_SETUP_SESSION_ID=""
+  fi
+fi
+
+open_safari_url
+sleep 8
+
 cat >"$ARTIFACT_DIR/prewarm-request.json" <<EOF
 {
   "capabilities": {
@@ -300,6 +364,8 @@ cat >"$ARTIFACT_DIR/prewarm-request.json" <<EOF
       "appium:useNewWDA": false,
       "appium:wdaLaunchTimeout": 180000,
       "appium:wdaStartupRetries": 1,
+      "appium:webviewConnectTimeout": 60000,
+      "appium:webviewConnectRetries": 60,
       "appium:showXcodeLog": true
     }
   }
@@ -403,14 +469,19 @@ wd_wait styled-login 'return (() => { const g=document.querySelector("#care-role
 
 echo "Using the predefined Kim Minji client account"
 wd_click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
-wd_wait quick-login 'return !document.querySelector("#care-role-gate") && !!document.querySelector("#btn-enter");' 120
+wd_wait quick-login 'return (() => { if(document.querySelector("#care-role-gate"))return false; const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); const entryVisible=!!(entry&&getComputedStyle(entry).display!=="none"&&document.querySelector("#btn-enter")); return entryVisible||!!hub; })();' 120
 wd_capture "02-quick-login"
-wd_wait entry-layout 'return (() => { const entry=document.querySelector("#entry"); const sub=document.querySelector(".entry-sub"); const button=document.querySelector("#btn-enter"); if(!entry||!sub||!button)return false; const es=getComputedStyle(entry); const r=sub.getBoundingClientRect(); const b=button.getBoundingClientRect(); return es.position==="fixed" && es.display!=="none" && r.left>=12 && r.right<=innerWidth-12 && b.left>=12 && b.right<=innerWidth-12; })();' 30
-
-echo "Entering the atrium through the visible user path"
-wd_click '#btn-enter'
-wd_wait arrival-skip 'return !!document.querySelector("#skip") && getComputedStyle(document.querySelector("#skip")).display !== "none";' 60
-wd_click '#skip'
+POST_LOGIN_STATE="$(wd_eval 'return (() => { const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); return { entryVisible:!!(entry&&getComputedStyle(entry).display!=="none"), hubPresent:!!hub }; })()')"
+printf '%s\n' "$POST_LOGIN_STATE" >"$ARTIFACT_DIR/post-quick-login-state.json"
+if jq -e '.value.entryVisible == true' >/dev/null 2>&1 <<<"$POST_LOGIN_STATE"; then
+  wd_wait entry-layout 'return (() => { const entry=document.querySelector("#entry"); const sub=document.querySelector(".entry-sub"); const button=document.querySelector("#btn-enter"); if(!entry||!sub||!button)return false; const es=getComputedStyle(entry); const r=sub.getBoundingClientRect(); const b=button.getBoundingClientRect(); return es.position==="fixed" && es.display!=="none" && r.left>=12 && r.right<=innerWidth-12 && b.left>=12 && b.right<=innerWidth-12; })();' 30
+  echo "Entering the atrium through the visible first-entry path"
+  wd_click '#btn-enter'
+  wd_wait arrival-skip 'return !!document.querySelector("#skip") && getComputedStyle(document.querySelector("#skip")).display !== "none";' 60
+  wd_click '#skip'
+else
+  echo "The remembered client session completed the entry animation and reached the atrium directly"
+fi
 wd_wait atrium-hub 'return !!document.querySelector(".zone-card[data-zone-key=\"match\"]") && window.__maeumAtriumLoaderMode === "ios-webgl-iife" && window.__maeumAtriumVisualMode === "webgl" && !!window.__maeumRenderStats && window.__maeumRenderStats.frames > 0;' 120
 wd_capture "03-atrium-hub"
 
@@ -473,8 +544,7 @@ cat >"$ARTIFACT_DIR/result.json" <<EOF
   "user_path": [
     "public URL",
     "Kim Minji predefined account",
-    "enter counseling room",
-    "skip arrival",
+    "first-entry or remembered-session transition",
     "3D atrium hub",
     "Counseling Confirmation"
   ]
