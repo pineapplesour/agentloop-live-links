@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-07-23T15:56:25+09:00",
+  "generatedAt": "2026-07-23T16:17:40+09:00",
   "tunnelBase": "https://ata-career-entire-links.trycloudflare.com/agent-live-dev",
-  "adapterVersion": "20260723-admin-account-prompt-password-only-136",
+  "adapterVersion": "20260723-admin-prompt-apply-lock-139",
   "groups": [
     {
       "title": "바로 확인",
@@ -10,7 +10,7 @@
         {
           "id": "maeum-atrium",
           "title": "랄피 3D 아트리움 계정 연결본",
-          "href": "https://ata-career-entire-links.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=136",
+          "href": "https://ata-career-entire-links.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=139",
           "status": "live",
           "note": "현재 계정 DB·관리자 개인 프롬프트·이메일 없는 가입이 연결된 최신 터널"
         }
@@ -22,7 +22,7 @@
         {
           "id": "maeum-atrium-dev",
           "title": "랄피 3D 아트리움 수정용",
-          "href": "https://ata-career-entire-links.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=136",
+          "href": "https://ata-career-entire-links.trycloudflare.com/agent-live-dev/maeum-atrium.html?modelProvider=gemini-live&dev=1&iosfix=139",
           "status": "work",
           "note": "계정별 데이터·관리자 프롬프트·외부 재로그인 종단 검증 중"
         }
