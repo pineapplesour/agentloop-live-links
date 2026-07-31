@@ -576,7 +576,10 @@ wd_click '.zone-card[data-zone-key="ai"]'
 wd_wait ralfi-chat 'return !!document.querySelector("#panel.show #chat-input") && !!document.querySelector("#atrium-controls-toggle");' 120
 wd_click '#atrium-controls-toggle'
 wd_wait codex-ready 'return (() => { const select=document.querySelector("#atrium-text-model"); const option=select&&select.querySelector("option[value=\"codex\"]"); return !!(select&&option&&!option.disabled); })();' 90
-wd_send_keys '#atrium-text-model' 'Codex Luna High'
+# SafariDriver accepts text input on a select without necessarily committing
+# the native picker choice. Click the real option element through WebDriver so
+# WebKit performs the same input/change path as a user selection.
+wd_click '#atrium-text-model option[value="codex"]'
 wd_wait codex-selected 'return document.querySelector("#atrium-text-model")?.value === "codex" && document.querySelector("#atrium-live-status")?.textContent.includes("Codex Luna High");' 90
 wd_send_keys '#chat-input' '상담 매칭하려면 어떻게 해야 하나요?'
 wd_click '#btn-send'
