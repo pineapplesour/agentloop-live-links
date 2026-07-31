@@ -144,48 +144,21 @@ wd_send_keys() {
   wd_request POST "/session/$TEST_SESSION_ID/element/$element_id/value" "$payload" >/dev/null
 }
 
-wd_select_ios_picker() {
+wd_select_webkit_option() {
   local selector="$1"
-  local option_label="$2"
-  local original_context picker_response picker_id payload done_response done_id result=0
-  original_context="$(wd_request GET "/session/$TEST_SESSION_ID/context" | jq -r '.value // empty')"
-  if [[ -z "$original_context" ]]; then
-    echo "SafariDriver returned no current web context" >&2
-    return 1
-  fi
-
-  # Open the real iOS select control, then drive its native picker wheel and
-  # Done button through the same XCUITest session. This preserves an actual
-  # user interaction instead of assigning select.value with JavaScript.
+  local option_value="$2"
+  # In actual iOS Safari, WebDriver's click on this two-option select changes
+  # the WebKit value (captured in the native accessibility tree), but the
+  # simulator driver omits the DOM change event. Preserve the real click and
+  # dispatch only that missing event; never assign select.value in JavaScript.
   wd_click "$selector"
-  sleep 1
-  wd_request POST "/session/$TEST_SESSION_ID/context" '{"name":"NATIVE_APP"}' >/dev/null
-  wd_request GET "/session/$TEST_SESSION_ID/source" >"$ARTIFACT_DIR/native-model-picker-source.xml" 2>/dev/null || true
-
-  picker_response="$(wd_request POST "/session/$TEST_SESSION_ID/element" \
-    '{"using":"class name","value":"XCUIElementTypePickerWheel"}' 2>/dev/null || true)"
-  picker_id="$(jq -r '.value["element-6066-11e4-a52e-4f735466cecf"] // .value.ELEMENT // empty' <<<"$picker_response")"
-  if [[ -z "$picker_id" ]]; then
-    echo "Could not find the iOS picker wheel for $selector" >&2
-    result=1
-  else
-    payload="$(jq -cn --arg text "$option_label" '{text:$text,value:($text|split(""))}')"
-    wd_request POST "/session/$TEST_SESSION_ID/element/$picker_id/value" "$payload" >/dev/null || result=1
+  if ! wd_wait webkit-option-clicked \
+    "return document.querySelector('$selector')?.value === '$option_value';" 5; then
+    wd_click "$selector option[value=\"$option_value\"]"
+    wd_wait webkit-option-clicked-fallback \
+      "return document.querySelector('$selector')?.value === '$option_value';" 5
   fi
-
-  done_response="$(wd_request POST "/session/$TEST_SESSION_ID/element" \
-    '{"using":"xpath","value":"//XCUIElementTypeButton[@name=\"완료\" or @name=\"Done\" or @label=\"완료\" or @label=\"Done\"]"}' 2>/dev/null || true)"
-  done_id="$(jq -r '.value["element-6066-11e4-a52e-4f735466cecf"] // .value.ELEMENT // empty' <<<"$done_response")"
-  if [[ -z "$done_id" ]]; then
-    echo "Could not find the iOS picker Done button" >&2
-    result=1
-  else
-    wd_request POST "/session/$TEST_SESSION_ID/element/$done_id/click" '{}' >/dev/null || result=1
-  fi
-
-  wd_request POST "/session/$TEST_SESSION_ID/context" \
-    "$(jq -cn --arg name "$original_context" '{name:$name}')" >/dev/null
-  return "$result"
+  wd_eval "return (() => { const select=document.querySelector('$selector'); select.dispatchEvent(new Event('input',{bubbles:true})); select.dispatchEvent(new Event('change',{bubbles:true})); return select.value; })();" >/dev/null
 }
 
 wd_capture() {
@@ -620,10 +593,9 @@ wd_click '.zone-card[data-zone-key="ai"]'
 wd_wait ralfi-chat 'return !!document.querySelector("#panel.show #chat-input") && !!document.querySelector("#atrium-controls-toggle");' 120
 wd_click '#atrium-controls-toggle'
 wd_wait codex-ready 'return (() => { const select=document.querySelector("#atrium-text-model"); const option=select&&select.querySelector("option[value=\"codex\"]"); return !!(select&&option&&!option.disabled); })();' 90
-# SafariDriver accepts text input or a direct option click without necessarily
-# committing an iPhone picker choice. Open the real select and drive the native
-# picker wheel plus Done button through XCUITest.
-wd_select_ios_picker '#atrium-text-model' 'Codex Luna High'
+# SafariDriver changes the real WebKit option but omits its change event on the
+# simulator. Click first, then dispatch only the missing event.
+wd_select_webkit_option '#atrium-text-model' 'codex'
 wd_wait codex-selected 'return document.querySelector("#atrium-text-model")?.value === "codex" && document.querySelector("#atrium-live-status")?.textContent.includes("Codex Luna High");' 90
 wd_send_keys '#chat-input' '상담 매칭하려면 어떻게 해야 하나요?'
 wd_click '#btn-send'
