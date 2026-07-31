@@ -571,7 +571,7 @@ wd_wait final-contract 'return document.documentElement.scrollWidth <= window.in
 
 echo "Opening Ralfi chat and asking the role-bound Codex assistant in Mobile Safari"
 wd_click '.btn-back'
-wd_wait atrium-hub-after-confirmation 'return !document.querySelector("#panel.show") && !!document.querySelector(".zone-card[data-zone-key=\"ai\"]");' 90
+wd_wait atrium-hub-after-confirmation 'return (() => { const state=window.__maeumArrivalState?.(); const menu=document.querySelector("#zone-menu.show"); const card=document.querySelector(".zone-card[data-zone-key=\"ai\"]"); return !document.querySelector("#panel.show") && state?.phase === "hub" && !!menu && !!card; })();' 90
 wd_click '.zone-card[data-zone-key="ai"]'
 wd_wait ralfi-chat 'return !!document.querySelector("#panel.show #chat-input") && !!document.querySelector("#atrium-controls-toggle");' 120
 wd_click '#atrium-controls-toggle'
