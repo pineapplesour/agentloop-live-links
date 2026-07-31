@@ -484,8 +484,26 @@ wd_eval 'return (() => {
 wd_wait styled-login 'return (() => { const g=document.querySelector("#care-role-gate"); const c=g&&g.querySelector(".role-card"); if(!g||!c)return false; const gs=getComputedStyle(g); const cs=getComputedStyle(c); const r=c.getBoundingClientRect(); const sheets=Array.from(document.styleSheets).filter(s=>s.href&&s.href.includes("/assets/skins/")); return gs.position==="fixed" && gs.display!=="none" && cs.display!=="none" && cs.backgroundColor!=="rgba(0, 0, 0, 0)" && r.width>=300 && r.height>=300 && r.left>=0 && r.right<=innerWidth+1 && sheets.length>=2 && sheets.every(s=>{try{return s.cssRules.length>0}catch(_){return false}}); })();' 30
 
 echo "Using the predefined Kim Minji client account"
-wd_click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
-wd_wait quick-login 'return (() => { if(document.querySelector("#care-role-gate"))return false; const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); const entryVisible=!!(entry&&getComputedStyle(entry).display!=="none"&&document.querySelector("#btn-enter")); return entryVisible||!!hub; })();' 120
+QUICK_LOGIN_READY=false
+for QUICK_LOGIN_ATTEMPT in 1 2 3 4; do
+  echo "Quick-login attempt ${QUICK_LOGIN_ATTEMPT}/4"
+  wd_click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
+  if wd_wait "quick-login-attempt-${QUICK_LOGIN_ATTEMPT}" 'return (() => { if(document.querySelector("#care-role-gate"))return false; const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); const entryVisible=!!(entry&&getComputedStyle(entry).display!=="none"&&document.querySelector("#btn-enter")); return entryVisible||!!hub; })();' 25; then
+    QUICK_LOGIN_READY=true
+    break
+  fi
+  wd_capture "02-quick-login-attempt-${QUICK_LOGIN_ATTEMPT}"
+  wd_eval 'return (() => { const gate=document.querySelector("#care-role-gate"); const status=gate&&gate.querySelector("[role=status]"); return { gatePresent:!!gate, status:status?status.textContent.trim():"" }; })()' \
+    >"$ARTIFACT_DIR/02-quick-login-attempt-${QUICK_LOGIN_ATTEMPT}-state.json" || true
+  if (( QUICK_LOGIN_ATTEMPT < 4 )); then
+    echo "The normal authentication limiter may still be cooling down; retrying after 20 seconds"
+    sleep 20
+  fi
+done
+if [[ "$QUICK_LOGIN_READY" != true ]]; then
+  echo "Quick login did not complete after four bounded attempts" >&2
+  exit 1
+fi
 wd_capture "02-quick-login"
 POST_LOGIN_STATE="$(wd_eval 'return (() => { const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); return { entryVisible:!!(entry&&getComputedStyle(entry).display!=="none"), hubPresent:!!hub }; })()')"
 printf '%s\n' "$POST_LOGIN_STATE" >"$ARTIFACT_DIR/post-quick-login-state.json"

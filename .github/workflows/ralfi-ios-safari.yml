@@ -18,6 +18,10 @@ jobs:
     timeout-minutes: 40
     strategy:
       fail-fast: false
+      # The development quick-login endpoint deliberately shares the normal
+      # email sign-in limiter.  Serialise the two real Safari jobs so they do
+      # not turn that security control into a false product failure.
+      max-parallel: 1
       matrix:
         include:
           - ios_major: "18"
