@@ -505,7 +505,7 @@ QUICK_LOGIN_READY=false
 for QUICK_LOGIN_ATTEMPT in 1 2 3 4; do
   echo "Quick-login attempt ${QUICK_LOGIN_ATTEMPT}/4"
   wd_click '[data-action="DEV_QUICK_LOGIN"][data-account="client1"]'
-  if wd_wait "quick-login-attempt-${QUICK_LOGIN_ATTEMPT}" 'return (() => { if(document.querySelector("#care-role-gate"))return false; const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); const entryVisible=!!(entry&&getComputedStyle(entry).display!=="none"&&document.querySelector("#btn-enter")); return entryVisible||!!hub; })();' 25; then
+  if wd_wait "quick-login-attempt-${QUICK_LOGIN_ATTEMPT}" 'return (() => { if(document.querySelector("#care-role-gate"))return false; const entry=document.querySelector("#entry"); const chat=document.querySelector("#panel.show #chat-input"); const entryVisible=!!(entry&&getComputedStyle(entry).display!=="none"&&document.querySelector("#btn-enter")); return entryVisible||!!chat; })();' 25; then
     QUICK_LOGIN_READY=true
     break
   fi
@@ -522,7 +522,7 @@ if [[ "$QUICK_LOGIN_READY" != true ]]; then
   exit 1
 fi
 wd_capture "02-quick-login"
-POST_LOGIN_STATE="$(wd_eval 'return (() => { const entry=document.querySelector("#entry"); const hub=document.querySelector(".zone-card[data-zone-key=\"match\"]"); return { entryVisible:!!(entry&&getComputedStyle(entry).display!=="none"), hubPresent:!!hub }; })()')"
+POST_LOGIN_STATE="$(wd_eval 'return (() => { const entry=document.querySelector("#entry"); const chat=document.querySelector("#panel.show #chat-input"); return { entryVisible:!!(entry&&getComputedStyle(entry).display!=="none"), chatVisible:!!chat }; })()')"
 printf '%s\n' "$POST_LOGIN_STATE" >"$ARTIFACT_DIR/post-quick-login-state.json"
 if jq -e '.value.entryVisible == true' >/dev/null 2>&1 <<<"$POST_LOGIN_STATE"; then
   wd_wait entry-layout 'return (() => { const entry=document.querySelector("#entry"); const sub=document.querySelector(".entry-sub"); const button=document.querySelector("#btn-enter"); if(!entry||!sub||!button)return false; const es=getComputedStyle(entry); const r=sub.getBoundingClientRect(); const b=button.getBoundingClientRect(); return es.position==="fixed" && es.display!=="none" && r.left>=12 && r.right<=innerWidth-12 && b.left>=12 && b.right<=innerWidth-12; })();' 30
@@ -531,35 +531,15 @@ if jq -e '.value.entryVisible == true' >/dev/null 2>&1 <<<"$POST_LOGIN_STATE"; t
   wd_wait arrival-skip 'return !!document.querySelector("#skip") && getComputedStyle(document.querySelector("#skip")).display !== "none";' 60
   wd_click '#skip'
 else
-  echo "The remembered client session completed the entry animation and reached the atrium directly"
+  echo "The remembered client session completed the entry animation and reached Ralfi chat directly"
 fi
-wd_wait atrium-hub 'return !!document.querySelector(".zone-card[data-zone-key=\"match\"]") && window.__maeumAtriumLoaderMode === "ios-webgl-iife" && window.__maeumAtriumVisualMode === "webgl" && !!window.__maeumRenderStats && window.__maeumRenderStats.frames > 0;' 120
-wd_capture "03-atrium-hub"
-
-echo "Opening Counseling Confirmation from the actual atrium card"
-wd_click '.zone-card[data-zone-key="match"]'
-wd_wait counseling-confirmation 'return !!document.querySelector("#panel.show") && !!document.querySelector("#panel-card") && document.querySelector("#panel-card").textContent.includes("상담 확인");' 120
-wd_capture "04-counseling-confirmation"
-
+echo "Verifying direct Ralfi chat-only entry in actual Mobile Safari"
+wd_wait ralfi-chat 'return !!document.querySelector("#panel.show #chat-input") && !!document.querySelector("#atrium-controls-toggle");' 120
+wd_capture "03-ralfi-chat-only"
 wd_eval 'return (() => {
-  const canvas = document.querySelector("#webgl canvas");
-  let centerPixel = null;
-  let webglVersion = null;
-  if (canvas) {
-    const gl = canvas.getContext("webgl2") || canvas.getContext("webgl");
-    if (gl) {
-      const pixel = new Uint8Array(4);
-      gl.readPixels(
-        Math.max(0, Math.floor(gl.drawingBufferWidth / 2)),
-        Math.max(0, Math.floor(gl.drawingBufferHeight / 2)),
-        1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel
-      );
-      centerPixel = Array.from(pixel);
-      webglVersion = gl.getParameter(gl.VERSION);
-    }
-  }
-  const panel = document.querySelector("#panel");
-  const card = document.querySelector("#panel-card");
+  const visible = (node) => !!(node && getComputedStyle(node).display !== "none" && node.getBoundingClientRect().width > 0 && node.getBoundingClientRect().height > 0);
+  const forbidden = ["#zone-menu", "#integrated-workspace", "#video-consultation-shell", "#atrium-menu-suggestions", "#atrium-action-cards"];
+  const forbiddenVisible = forbidden.filter((selector) => visible(document.querySelector(selector)));
   return {
     url: location.href,
     userAgent: navigator.userAgent,
@@ -567,42 +547,31 @@ wd_eval 'return (() => {
     touchPoints: navigator.maxTouchPoints,
     viewport: { width: innerWidth, height: innerHeight, dpr: devicePixelRatio },
     documentWidth: document.documentElement.scrollWidth,
-    loaderMode: window.__maeumAtriumLoaderMode || null,
-    forceStatic: window.__maeumForceStaticAtrium === true,
-    visualMode: window.__maeumAtriumVisualMode || null,
-    rendererProfile: window.__maeumAtriumRendererProfile || null,
-    webglError: window.__maeumAtriumWebGLError || null,
-    renderStats: window.__maeumRenderStats || null,
-    webglVersion,
-    centerPixel,
-    panelDisplay: panel ? getComputedStyle(panel).display : null,
-    panelOpacity: panel ? getComputedStyle(panel).opacity : null,
-    panelVisible: !!(panel && panel.classList.contains("show")),
-    panelTextIncludesCounselingConfirmation: !!(card && card.textContent.includes("상담 확인")),
-    panelBackdropFilter: card ? getComputedStyle(card).backdropFilter : null,
-    bodyClasses: document.body.className
+    title: document.title,
+    bodyClasses: document.body.className,
+    chatVisible: visible(document.querySelector("#panel.show #chat-input")),
+    forbiddenVisible,
+    actionCards: document.querySelectorAll("[data-atrium-action-card]").length,
+    menuSuggestions: document.querySelectorAll("[data-atrium-menu-section]").length,
+    signOutVisible: visible(document.querySelector("[data-atrium-global-sign-out]"))
   };
 })()' >"$ARTIFACT_DIR/diagnostics.json"
+wd_wait chat-only-contract 'return (() => { const visible=(n)=>!!(n&&getComputedStyle(n).display!=="none"&&n.getBoundingClientRect().width>0&&n.getBoundingClientRect().height>0); return document.documentElement.scrollWidth<=window.innerWidth+1 && document.body.classList.contains("ralfi-chat-only") && visible(document.querySelector("#panel.show #chat-input")) && visible(document.querySelector("[data-atrium-global-sign-out]")) && !visible(document.querySelector("#zone-menu")) && !visible(document.querySelector("#integrated-workspace")) && !visible(document.querySelector("#video-consultation-shell")) && document.querySelectorAll("[data-atrium-action-card]").length===0 && document.querySelectorAll("[data-atrium-menu-section]").length===0; })();' 90
 
-wd_wait final-contract 'return document.documentElement.scrollWidth <= window.innerWidth + 1 && !!document.querySelector("#panel.show") && !!document.querySelector("#panel-card") && document.querySelector("#panel-card").textContent.includes("상담 확인") && window.__maeumAtriumVisualMode === "webgl" && window.__maeumForceStaticAtrium !== true && !window.__maeumAtriumWebGLError && (() => { const c=document.querySelector("#webgl canvas"); if(!c)return false; const g=c.getContext("webgl2")||c.getContext("webgl"); if(!g)return false; const p=new Uint8Array(4); g.readPixels(Math.floor(g.drawingBufferWidth/2),Math.floor(g.drawingBufferHeight/2),1,1,g.RGBA,g.UNSIGNED_BYTE,p); return p[3] > 0 && (p[0]+p[1]+p[2]) > 0; })();' 90
-
-echo "Opening Ralfi chat and asking the role-bound Codex assistant in Mobile Safari"
-wd_click '.btn-back'
-wd_wait atrium-hub-after-confirmation 'return (() => { const state=window.__maeumArrivalState?.(); const menu=document.querySelector("#zone-menu.show"); const card=document.querySelector(".zone-card[data-zone-key=\"ai\"]"); return !document.querySelector("#panel.show") && state?.phase === "hub" && !!menu && !!card; })();' 90
-wd_click '.zone-card[data-zone-key="ai"]'
-wd_wait ralfi-chat 'return !!document.querySelector("#panel.show #chat-input") && !!document.querySelector("#atrium-controls-toggle");' 120
+echo "Checking preserved chat tools and Codex chat-only refusal in Mobile Safari"
 wd_click '#atrium-controls-toggle'
 wd_wait codex-ready 'return (() => { const select=document.querySelector("#atrium-text-model"); const option=select&&select.querySelector("option[value=\"codex\"]"); return !!(select&&option&&!option.disabled); })();' 90
+wd_wait preserved-tools 'return (() => { const prompt=document.querySelector("#atrium-prompt-btn"); return !!document.querySelector("#atrium-voice-btn") && !!document.querySelector("#atrium-history-btn") && !!document.querySelector("#atrium-project-btn") && !!prompt && prompt.hidden; })();' 30
 # SafariDriver changes the real WebKit option but omits its change event on the
 # simulator. Click first, then dispatch only the missing event.
 wd_select_webkit_option '#atrium-text-model' 'codex'
 wd_wait codex-selected 'return document.querySelector("#atrium-text-model")?.value === "codex" && document.querySelector("#atrium-live-status")?.textContent.includes("Codex Luna High");' 90
-wd_send_keys '#chat-input' '상담 매칭하려면 어떻게 해야 하나요?'
+wd_send_keys '#chat-input' '상담 요청을 보내고 계정 설정을 바꿔줘.'
 wd_click '#btn-send'
-wd_wait assistant-answer 'return (() => { const answers=Array.from(document.querySelectorAll("#chat-scroll .bubble.ai")); const answer=answers[answers.length-1]; const schedule=document.querySelector("[data-atrium-menu-section=\"schedule\"]"); return !!(answer && answer.textContent.trim().length >= 20 && schedule); })();' 180
-wd_capture "05-codex-assistant"
+wd_wait assistant-answer 'return (() => { const answers=Array.from(document.querySelectorAll("#chat-scroll .bubble.ai")); const answer=answers[answers.length-1]; return !!(answer && answer.textContent.trim().length >= 20 && !answer.hasAttribute("data-voice-draft")); })();' 180
+wd_capture "04-codex-chat-only"
 wd_eval 'return (() => { const answers=Array.from(document.querySelectorAll("#chat-scroll .bubble.ai")); const answer=answers[answers.length-1]; const suggestions=Array.from(document.querySelectorAll("[data-atrium-menu-section]")); return { selectedModel:document.querySelector("#atrium-text-model")?.value||null, status:document.querySelector("#atrium-live-status")?.textContent||null, answer:answer?.textContent||null, suggestions:suggestions.map(node=>({section:node.dataset.atriumMenuSection,capabilityId:node.dataset.atriumCapabilityId,label:node.textContent.trim()})), overflow:document.documentElement.scrollWidth-window.innerWidth }; })();' >"$ARTIFACT_DIR/codex-assistant-diagnostics.json"
-wd_wait assistant-contract 'return (() => { const data=Array.from(document.querySelectorAll("[data-atrium-menu-section]")); return document.querySelector("#atrium-text-model")?.value === "codex" && data.length === 1 && data[0].dataset.atriumMenuSection === "schedule" && document.documentElement.scrollWidth <= window.innerWidth + 1; })();' 30
+wd_wait assistant-contract 'return (() => { const data=Array.from(document.querySelectorAll("[data-atrium-menu-section]")); const cards=document.querySelectorAll("[data-atrium-action-card]"); return document.querySelector("#atrium-text-model")?.value === "codex" && data.length === 0 && cards.length === 0 && document.documentElement.scrollWidth <= window.innerWidth + 1; })();' 30
 
 cat >"$ARTIFACT_DIR/result.json" <<EOF
 {
@@ -614,13 +583,13 @@ cat >"$ARTIFACT_DIR/result.json" <<EOF
     "public URL",
     "Kim Minji predefined account",
     "first-entry or remembered-session transition",
-    "3D atrium hub",
-    "Counseling Confirmation",
-    "Ralfi chat",
-    "Codex Luna High role-bound matching guidance",
-    "Counseling and schedule suggestion"
+    "direct Ralfi chat-only entry",
+    "preserved voice, history, and project controls",
+    "disabled counseling and settings surfaces",
+    "Codex Luna High chat-only refusal",
+    "zero menu suggestions and action cards"
   ]
 }
 EOF
 
-echo "Ralfi Mobile Safari user path passed on iOS ${IOS_MAJOR}.x"
+echo "Ralfi chat-only Mobile Safari user path passed on iOS ${IOS_MAJOR}.x"
