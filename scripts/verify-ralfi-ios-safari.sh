@@ -553,10 +553,11 @@ wd_eval 'return (() => {
     forbiddenVisible,
     actionCards: document.querySelectorAll("[data-atrium-action-card]").length,
     menuSuggestions: document.querySelectorAll("[data-atrium-menu-section]").length,
-    signOutVisible: visible(document.querySelector("[data-atrium-global-sign-out]"))
+    signOutVisible: visible(document.querySelector(".atrium-chat-sign-out[data-action=\"AUTH_SIGN_OUT\"]")),
+    signOutLabel: document.querySelector(".atrium-chat-sign-out[data-action=\"AUTH_SIGN_OUT\"]")?.textContent?.trim() || ""
   };
 })()' >"$ARTIFACT_DIR/diagnostics.json"
-wd_wait chat-only-contract 'return (() => { const visible=(n)=>!!(n&&getComputedStyle(n).display!=="none"&&n.getBoundingClientRect().width>0&&n.getBoundingClientRect().height>0); return document.documentElement.scrollWidth<=window.innerWidth+1 && document.body.classList.contains("ralfi-chat-only") && visible(document.querySelector("#panel.show #chat-input")) && visible(document.querySelector("[data-atrium-global-sign-out]")) && !visible(document.querySelector("#zone-menu")) && !visible(document.querySelector("#integrated-workspace")) && !visible(document.querySelector("#video-consultation-shell")) && document.querySelectorAll("[data-atrium-action-card]").length===0 && document.querySelectorAll("[data-atrium-menu-section]").length===0; })();' 90
+wd_wait chat-only-contract 'return (() => { const visible=(n)=>!!(n&&getComputedStyle(n).display!=="none"&&n.getBoundingClientRect().width>0&&n.getBoundingClientRect().height>0); const signOut=document.querySelector(".atrium-chat-sign-out[data-action=\"AUTH_SIGN_OUT\"]"); return document.documentElement.scrollWidth<=window.innerWidth+1 && document.body.classList.contains("ralfi-chat-only") && visible(document.querySelector("#panel.show #chat-input")) && visible(signOut) && /Sign out|로그아웃/.test(signOut.textContent||"") && !visible(document.querySelector("#zone-menu")) && !visible(document.querySelector("#integrated-workspace")) && !visible(document.querySelector("#video-consultation-shell")) && document.querySelectorAll("[data-atrium-action-card]").length===0 && document.querySelectorAll("[data-atrium-menu-section]").length===0; })();' 90
 
 echo "Checking preserved chat tools and Codex chat-only refusal in Mobile Safari"
 wd_click '#atrium-controls-toggle'
